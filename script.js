@@ -404,18 +404,15 @@ function create (){
 
     //Tests for movements of entitity class 
     if(keyL.isDown) {
-        astronauts[0].moveLeft();
-        astroTurnCounter++;
+        astronauts[0].moveLeft(); 
     }
 
     if(keyR.isDown) {
         astronauts[1].moveRight();
-        astroTurnCounter++;
     }
 
     if(keyF.isDown) {
         astronauts[1].fire();
-        astroTurnCounter++;
     }
     
     if(keyJ.isDown) {
