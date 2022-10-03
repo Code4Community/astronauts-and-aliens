@@ -41,6 +41,24 @@ class Spaceship extends Phaser.Physics.Arcade.Sprite {
     }
 }
 
+// Function to allow entity types to move left
+Entity.prototype.moveLeft = function() {
+    this.setVelocityX(-140);
+   var that = this;
+    setTimeout(function() {
+        that.setVelocityX(0);
+    }, 2000);
+}
+
+// Function to allow entity types to move right
+Entity.prototype.moveRight = function() {
+    this.setVelocityX(140);
+    var that = this;
+    setTimeout(function() {
+        that.setVelocityX(0);
+    }, 2000);
+}
+
 //Define the game
 var game = new Phaser.Game(config);
 
