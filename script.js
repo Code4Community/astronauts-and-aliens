@@ -59,9 +59,26 @@ function preload() {
 
 function create() {
 
+    // creating asteroids group
+    asteroids = this.physics.add.staticGroup();
+
+    // placing the asteroids
+    for(var i = 0;i < 10; i++) {
+        asteroids.create(360 + Math.random() * 20, 120 + Math.random() * 20, 'asteroid');
+    }
+
+    // creating colliders for asteroids
+    this.physics.add.collider(spaceship, asteroids);
+    this.physics.add.collider(ufo, asteroids);
+    this.physics.add.collider(laser, asteroids);
 }
 
 function update() {
+    this.physics.collide(laser, asteroids, impact);
+}
 
+function impact(laser, asteroid) {
+    asteroid.destroy();
+    laser.setActive(false).setVisible(false);
 }
 

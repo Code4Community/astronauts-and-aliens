@@ -13,6 +13,13 @@
 - have large obstacles with "gravity" (suns, planets)
 - have different kinds of projectiles
 
+## Tasks
+- Sprites
+   - spaceship, ufo, asteroids
+- Obstacles
+- Functions for player/opponent
+- Turns
+
 ### Ideas for Implementing turn based play
 
 -- Add event listeners to interact with Html 
@@ -21,5 +28,3 @@
 --triggers even lister
 --trigers change to boolean as to whose turn it is
      --- seperate function (ie boolean outside of updateS)
-
-
