@@ -1,5 +1,5 @@
 //Screen Seize and Camera
-var screenWidth = 800;
+var screenWidth = 1000;
 var scrollWidth = 2*screenWidth; // width of the rolling screen
 var screenHeight = 600;
 
@@ -37,7 +37,7 @@ function create() {
 
     // placing the asteroids
     for(var i = 0;i < 10; i++) {
-        asteroids.create(360 + Math.random() * 20, 120 + Math.random() * 20, 'asteroid');
+        asteroids.create(500 + getRandomInt(-200, 200), 300 + getRandomInt(-300, 300), 'asteroid').setScale(0.1);
     }
 
     // creating colliders for asteroids
@@ -53,4 +53,10 @@ function update() {
 function impact(laser, asteroid) {
     asteroid.destroy();
     laser.setActive(false).setVisible(false);
+}
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min);
 }
