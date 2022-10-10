@@ -55,6 +55,8 @@ function preload() {
     this.load.image('num2', 'assets/numbers/number2.png');
     this.load.image('num3', 'assets/numbers/number3.png');
     this.load.image('Spaceship', 'assets/Spaceship.png');
+
+    this.load.image('asteroid', 'assets/Spaceship.png');
 }
 
 function create() {
