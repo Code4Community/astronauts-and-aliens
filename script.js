@@ -109,25 +109,26 @@ function preload() {
     this.load.image('num3', 'assets/numbers/number3.png');
     this.load.image('Spaceship', 'assets/Spaceship.png');
     this.load.image('bullet', 'assets/bullet.png');
+
 }
 
 let spaceship;
 
 function create() {
-// creating asteroids group
-asteroids = this.physics.add.staticGroup();
+    // creating asteroids group
+    asteroids = this.physics.add.staticGroup();
 
-// placing the asteroids
-for(var i = 0;i < 10; i++) {
+    // placing the asteroids
+    for(var i = 0;i < 10; i++) {
     asteroids.create(360 + Math.random() * 20, 120 + Math.random() * 20, 'asteroid');
-}
+    }
 
-// creating colliders for asteroids
-this.physics.add.collider(spaceship, asteroids);
-this.physics.add.collider(ufo, asteroids);
-this.physics.add.collider(laser, asteroids);
+    // creating colliders for asteroids
+    this.physics.add.collider(spaceship, asteroids);
+    this.physics.add.collider(ufo, asteroids);
+    this.physics.add.collider(laser, asteroids);
 
-spaceship = new Spaceship(this, 400, 400)
+    spaceship = new Spaceship(this, 400, 400)
     this.input.keyboard.on('keydown_W', () => spaceship.moveUp(), this);
     this.input.keyboard.on('keydown_A', () => spaceship.moveLeft(), this);
     this.input.keyboard.on('keydown_S', () => spaceship.moveDown(), this);
@@ -147,3 +148,4 @@ function update() {
 function impact(laser, asteroid) {
     asteroid.destroy();
     laser.setActive(false).setVisible(false);
+}
