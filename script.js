@@ -123,17 +123,17 @@ function create() {
         asteroids.create(500 + getRandomInt(-200, 200), 300 + getRandomInt(-300, 300), 'asteroid').setScale(0.1);
     }
 
-    // creating colliders for asteroids
-    this.physics.add.collider(spaceship, asteroids);
-    this.physics.add.collider(ufo, asteroids);
-    this.physics.add.collider(laser, asteroids);
-
     spaceship = new Spaceship(this, 400, 400)
     this.input.keyboard.on('keydown_W', () => spaceship.moveUp(), this);
     this.input.keyboard.on('keydown_A', () => spaceship.moveLeft(), this);
     this.input.keyboard.on('keydown_S', () => spaceship.moveDown(), this);
     this.input.keyboard.on('keydown_D', () => spaceship.moveRight(), this);
     this.input.keyboard.on('keydown_Q', () => spaceship.shoot(45), this);
+
+    // creating colliders for asteroids
+    this.physics.add.collider(spaceship, asteroids);
+    //this.physics.add.collider(ufo, asteroids);
+    //this.physics.add.collider(laser, asteroids);
 }
 
 function update() {
@@ -142,7 +142,7 @@ function update() {
     spaceship.setVelocityX(spaceship.vx)
     spaceship.setVelocityY(spaceship.vy)
 
-    this.physics.collide(laser, asteroids, impact);
+    //this.physics.collide(laser, asteroids, impact);
 }
 
 function impact(laser, asteroid) {
