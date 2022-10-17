@@ -2,6 +2,9 @@
 var screenWidth = 1000;
 var scrollWidth = 2*screenWidth; // width of the rolling screen
 var screenHeight = 600;
+var asteroidScreenMargin=40;
+var spaceshipSpawnX=screenWidth/2;
+var spaceshipSpawnY=screenHeight/2;
 
 var config = {
     type: Phaser.AUTO,
@@ -120,10 +123,11 @@ function create() {
 
     // placing the asteroids
     for(var i = 0;i < 10; i++) {
-        asteroids.create(500 + getRandomInt(-200, 200), 300 + getRandomInt(-300, 300), 'asteroid').setScale(0.1);
+        // asteroids.create(500 + getRandomInt(-200, 200), 300 + getRandomInt(-300, 300), 'asteroid').setScale(0.1);
+        asteroids.create(getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin), 'asteroid').setScale(0.1);
     }
 
-    spaceship = new Spaceship(this, 400, 400)
+    spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY)
     this.input.keyboard.on('keydown_W', () => spaceship.moveUp(), this);
     this.input.keyboard.on('keydown_A', () => spaceship.moveLeft(), this);
     this.input.keyboard.on('keydown_S', () => spaceship.moveDown(), this);

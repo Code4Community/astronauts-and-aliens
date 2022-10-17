@@ -180,7 +180,7 @@ Alien.prototype.easyTurn = function() {
             break;
         case 5:
             this.jumpRight();
-            break;s
+            break;
     }
 }
 
