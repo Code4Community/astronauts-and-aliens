@@ -40,10 +40,10 @@ class Spaceship extends Phaser.Physics.Arcade.Sprite {
         
         // When we determine the file name of the sprite for spaceship we need
         // to replace 'Spaceship' with the file name
-        super(scene, x, y, 'Spaceship');
+        super(scene, x, y, 'spaceship');
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        this.setScale(0.3, 0.3);
+        this.setScale(0.8, 0.8);
         this.setBounce(0.3);
         this.setCollideWorldBounds(true);
 
@@ -57,10 +57,10 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
         
         // When we determine the file name of the sprite for spaceship we need
         // to replace 'Spaceship' with the file name
-        super(scene, x, y, 'Spaceship');
+        super(scene, x, y, 'asteroid');
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        this.setScale(0.1, 0.1);
+        this.setScale(0.8, 0.8);
         this.setBounce(0.3);
         this.setCollideWorldBounds(true);
         this.setImmovable(true);
@@ -118,15 +118,15 @@ var game = new Phaser.Game(config);
 function preload() {
     this.load.image('nightSky', 'assets/BACKROUND.png');
     this.load.image('ground', 'assets/Obstacle.png');
-    this.load.image('Rover', 'assets/Rover.png');
+    this.load.image('rover', 'assets/Rover.png');
     this.load.spritesheet('humanobstacle', 'assets/humanObstacles.png', {frameWidth: 64, frameHeight: 64});
     this.load.spritesheet('astronautidle', 'assets/astroidle2.png', { frameWidth: 64, frameHeight: 64 });
     this.load.spritesheet('alienidle', 'assets/alienidle.png', { frameWidth: 64, frameHeight: 64 });
     this.load.image('num1', 'assets/numbers/number1.png');
     this.load.image('num2', 'assets/numbers/number2.png');
     this.load.image('num3', 'assets/numbers/number3.png');
-    this.load.image('Spaceship', 'assets/Spaceship.png');
-    this.load.image('asteroid', 'assets/Spaceship.png');
+    this.load.image('spaceship', 'assets/Space Ship 3 Hearts.png');
+    this.load.image('asteroid', 'assets/Small Asteroid.png');
     this.load.image('bullet', 'assets/bullet.png');
 }
 
