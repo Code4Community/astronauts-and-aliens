@@ -52,6 +52,21 @@ class Spaceship extends Phaser.Physics.Arcade.Sprite {
     }
 }
 
+class Asteroid extends Phaser.Physics.Arcade.Sprite {
+    constructor(scene, x, y) {
+        
+        // When we determine the file name of the sprite for spaceship we need
+        // to replace 'Spaceship' with the file name
+        super(scene, x, y, 'Spaceship');
+        scene.add.existing(this);
+        scene.physics.add.existing(this);
+        this.setScale(0.1, 0.1);
+        this.setBounce(0.3);
+        this.setCollideWorldBounds(true);
+        this.setImmovable(true);
+    }
+}
+
 Spaceship.prototype.vx = 0
 Spaceship.prototype.vy = 0
 
@@ -116,15 +131,15 @@ function preload() {
 }
 
 let spaceship;
-
+const asteroids = [];
 function create() {
-    // creating asteroids group
-    asteroids = this.physics.add.staticGroup();
 
     // placing the asteroids
     for(var i = 0;i < 10; i++) {
         // asteroids.create(500 + getRandomInt(-200, 200), 300 + getRandomInt(-300, 300), 'asteroid').setScale(0.1);
-        asteroids.create(getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin), 'asteroid').setScale(0.1);
+        //asteroids.create(getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin), 'asteroid').setScale(0.1);
+        asteroids[i] = new Asteroid(this,getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin));
+        
     }
 
     spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY)
@@ -135,7 +150,11 @@ function create() {
     this.input.keyboard.on('keydown_Q', () => spaceship.shoot(45), this);
 
     // creating colliders for asteroids
-    this.physics.add.collider(spaceship, asteroids);
+    for(var i = 0; i<10; i++){
+        this.physics.add.collider(spaceship, asteroids[i]);
+    }
+    
+
     //this.physics.add.collider(ufo, asteroids);
     //this.physics.add.collider(laser, asteroids);
 }
