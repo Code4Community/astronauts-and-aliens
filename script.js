@@ -116,7 +116,7 @@ Spaceship.prototype.shoot = function (angle) {
 var game = new Phaser.Game(config);
 
 function preload() {
-    this.load.image('nightSky', 'assets/nightsky.png');
+    this.load.image('nightSky', 'assets/BACKROUND.png');
     this.load.image('ground', 'assets/Obstacle.png');
     this.load.image('Rover', 'assets/Rover.png');
     this.load.spritesheet('humanobstacle', 'assets/humanObstacles.png', {frameWidth: 64, frameHeight: 64});
