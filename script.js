@@ -133,14 +133,7 @@ function preload() {
 let spaceship;
 const asteroids = [];
 function create() {
-
-    // placing the asteroids
-    for(var i = 0;i < 10; i++) {
-        // asteroids.create(500 + getRandomInt(-200, 200), 300 + getRandomInt(-300, 300), 'asteroid').setScale(0.1);
-        //asteroids.create(getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin), 'asteroid').setScale(0.1);
-        asteroids[i] = new Asteroid(this,getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin));
-        
-    }
+    
 
     spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY)
     this.input.keyboard.on('keydown_W', () => spaceship.moveUp(), this);
@@ -149,8 +142,13 @@ function create() {
     this.input.keyboard.on('keydown_D', () => spaceship.moveRight(), this);
     this.input.keyboard.on('keydown_Q', () => spaceship.shoot(45), this);
 
-    // creating colliders for asteroids
-    for(var i = 0; i<10; i++){
+
+    // placing the asteroids
+    for(var i = 0;i < 10; i++) {
+        // asteroids.create(500 + getRandomInt(-200, 200), 300 + getRandomInt(-300, 300), 'asteroid').setScale(0.1);
+        //asteroids.create(getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin), 'asteroid').setScale(0.1);
+        asteroids[i] = new Asteroid(this,getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin));
+        
         this.physics.add.collider(spaceship, asteroids[i]);
     }
     
