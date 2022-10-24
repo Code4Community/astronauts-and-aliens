@@ -1,8 +1,9 @@
-//Screen Seize and Camera
+// screen size and camera
 var screenWidth = 1000;
 var scrollWidth = 2*screenWidth; // width of the rolling screen
 var screenHeight = 600;
 
+// asteroid parameters
 var asteroidScreenMargin=40;
 var asteroidCount=6;
 var asteroidSpawnXMin=(screenWidth/2)-200;
@@ -10,6 +11,7 @@ var asteroidSpawnXMax=(screenWidth/2)+200;
 var asteroidSpawnYMin=0;
 var asteroidSpawnYMax=screenHeight;
 
+// spaceship parameters
 var spaceshipSpawnY=screenHeight/2;
 var spaceshipSpawnX=screenWidth/2;
 var spaceshipSpawnY=screenHeight/2;
@@ -38,7 +40,7 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'bullet')
         scene.add.existing(this)
-        this.setScale(0.1, 0.1)
+        this.setScale(0.3)
         scene.physics.add.existing(this)
         this.setCollideWorldBounds(true)
     }
@@ -126,7 +128,6 @@ function preload() {
 let spaceship;
 const asteroids = [];
 function create() {
-    
 
     spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY)
     this.input.keyboard.on('keydown_W', () => spaceship.moveUp(), this);
