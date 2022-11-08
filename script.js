@@ -16,6 +16,7 @@ var spaceshipSpawnY=screenHeight/2;
 var spaceshipSpawnX=screenWidth/2;
 var spaceshipSpawnY=screenHeight/2;
 var spaceshipVelocity=140;
+var SpaceshipLife = 3;
 
 var config = {
     type: Phaser.AUTO,
