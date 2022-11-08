@@ -160,6 +160,30 @@ function create() {
     
     //this.physics.add.collider(ufo, asteroids);
     //this.physics.add.collider(laser, asteroids);
+    function LSAnimation(){
+        if(SpaceshipLife === 2){
+          this.anims.create({
+              frames: this.anims.generateFrameNumbers('SpaceS2', { start: 0, end: 3 }),
+              frameRate: 8,
+              repeat: -1
+          });
+        }
+        if(SpaceshipLife === 1){
+          this.anims.create({
+              frames: this.anims.generateFrameNumbers('SpaceS1', { start: 0, end: 0 }),
+              frameRate: 8,
+              repeat: -1
+          });
+      }
+      if(SpaceshipLife === 0){
+          this.anims.create({
+              frames: this.anims.generateFrameNumbers('SUEXPLODE', { start: 0, end: 8 }),
+              frameRate: 20,
+              repeat: 0
+          });
+      }
+      }
+      
 }
 
 function update() {
