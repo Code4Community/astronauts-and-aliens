@@ -123,6 +123,12 @@ function preload() {
     this.load.image('spaceship', 'assets/Space Ship 3 Hearts.png');
     this.load.image('asteroid', 'assets/Small Asteroid.png');
     this.load.image('bullet', 'assets/bullet.png');
+    this.load.spritesheet('SpaceS2', 'assets/Space Ship 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('UFO2', 'assets/UFO 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('SUEXPLODE', 'assets/Exploding object.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('AEXPLODE', 'assets/ASTEROID BREAK.png', { frameWidth: 200, frameHeight: 200 });
+    this.load.image('UFO1', 'assets/UFO 1 Hearts.png');
+    this.load.image('SpaceS1', 'assets/Space Ship 1 Hearts.png');
 }
 
 let spaceship;
