@@ -106,7 +106,9 @@ Spaceship.prototype.moveRight = function() {
     // }, 2000);
 }
 
-Spaceship.prototype.shoot = function (angle) {
+Spaceship.prototype.shoot = function () {
+    var angleDegrees = document.getElementById("angle").value;
+    var angleRadians = degreesToRadians(angleDegrees);
     const bullet = new Bullet(this.scene, this.x, this.y)
     bullet.setVelocityX(200 * Math.cos(angle / 360 * 2 * Math.PI))
     bullet.setVelocityY(200 * Math.sin(angle / 360 * 2 * Math.PI))
@@ -116,18 +118,9 @@ Spaceship.prototype.shoot = function (angle) {
 var game = new Phaser.Game(config);
 
 function preload() {
-    this.load.image('nightSky', 'assets/BACKROUND.png');
-    this.load.image('ground', 'assets/Obstacle.png');
-    this.load.image('rover', 'assets/Rover.png');
-    this.load.spritesheet('humanobstacle', 'assets/humanObstacles.png', {frameWidth: 64, frameHeight: 64});
-    this.load.spritesheet('astronautidle', 'assets/astroidle2.png', { frameWidth: 64, frameHeight: 64 });
-    this.load.spritesheet('alienidle', 'assets/alienidle.png', { frameWidth: 64, frameHeight: 64 });
-    this.load.image('num1', 'assets/numbers/number1.png');
-    this.load.image('num2', 'assets/numbers/number2.png');
-    this.load.image('num3', 'assets/numbers/number3.png');
     this.load.image('spaceship', 'assets/Space Ship 3 Hearts.png');
     this.load.image('asteroid', 'assets/Small Asteroid.png');
-    this.load.image('bullet', 'assets/bullet.png');
+    this.load.image('lazer', 'assets/lazer space ship.png');
 }
 
 let spaceship;
@@ -140,7 +133,7 @@ function create() {
     this.input.keyboard.on('keydown_A', () => spaceship.moveLeft(), this);
     this.input.keyboard.on('keydown_S', () => spaceship.moveDown(), this);
     this.input.keyboard.on('keydown_D', () => spaceship.moveRight(), this);
-    this.input.keyboard.on('keydown_Q', () => spaceship.shoot(45), this);
+    this.input.keyboard.on('keydown_Q', () => spaceship.shoot(), this);
 
 
     // placing the asteroids
@@ -163,6 +156,8 @@ function update() {
     spaceship.setVelocityX(spaceship.vx)
     spaceship.setVelocityY(spaceship.vy)
 
+
+
     //this.physics.collide(laser, asteroids, impact);
 }
 
@@ -175,4 +170,9 @@ function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min) + min);
+}
+
+function degreesToRadians(degrees) {
+    radians = degrees * Math.PI / 180;
+    return radians;
 }
