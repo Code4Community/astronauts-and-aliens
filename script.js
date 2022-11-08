@@ -18,6 +18,13 @@ var spaceshipSpawnY=screenHeight/2;
 var spaceshipVelocity=140;
 var SpaceshipLife = 3;
 
+// UFO parameters
+var UFOSpawnY=screenHeight/2;
+var UFOSpawnX=screenWidth/2;
+var UFOSpawnY=screenHeight/2;
+var UFOVelocity=140;
+var UFOLife = 3;
+
 var config = {
     type: Phaser.AUTO,
     parent: "game",
