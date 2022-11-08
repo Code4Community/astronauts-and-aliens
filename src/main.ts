@@ -38,6 +38,8 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 };
 
+const bullets: Bullet[] = [];
+
 class Bullet extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, image("bullet"));
@@ -45,6 +47,7 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
     this.setScale(0.3);
     scene.physics.add.existing(this);
     this.setCollideWorldBounds(true);
+    bullets.push(this);
   }
 }
 
@@ -147,6 +150,14 @@ let spaceship: Spaceship;
 const asteroids: Asteroid[] = [];
 
 function create(this: Phaser.Scene) {
+  for (let i = 0; i < 100; i++)
+    this.add.circle(
+      getRandomInt(0, this.renderer.width),
+      getRandomInt(0, this.renderer.height),
+      getRandomDouble(0.5, 3),
+      0xffffff
+    );
+
   spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY);
 
   document.addEventListener("keydown", (event) => {
@@ -170,6 +181,13 @@ function create(this: Phaser.Scene) {
 
   // this.physics.add.collider(ufo, asteroids);
   // this.physics.add.collider(laser, asteroids);
+
+  const input = document.querySelector("#angle") as HTMLInputElement;
+  const runButton = document.querySelector("#run") as HTMLButtonElement;
+
+  runButton.addEventListener("click", () => {
+    spaceship.shoot(-parseInt(input.value));
+  });
 }
 
 function update(this: Phaser.Scene) {
@@ -190,4 +208,8 @@ function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min) + min);
+}
+
+function getRandomDouble(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
 }
