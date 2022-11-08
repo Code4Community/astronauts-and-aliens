@@ -16,6 +16,7 @@ aliens = [];
 aliensTotal = 3;
 aliensAlive = [true,true,true];
 
+
 //Screen Seize and Camera
 var screenWidth = 800;
 var scrollWidth = 2*screenWidth; // width of the rolling screen
@@ -49,6 +50,7 @@ var game = new Phaser.Game(config);
 
 //--------------------------------------Entity Definitions --------------------------------------------
 
+//hjhjhbjhb//
 // Enitity class that defines movement of the players (astronauts) and enemies (alines)
 class Entity extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, sprite, index) {
@@ -494,8 +496,10 @@ function bulletTouchingSprite(){
 
 }
 
+
 function disappearBullet() {
     bullet.setActive(false).setVisible(false);
 }
+
 
 //-------------------------------------- End Extra Functions --------------------------------------------

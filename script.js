@@ -1,10 +1,29 @@
-//Screen Seize and Camera
+// screen size and camera
 var screenWidth = 1000;
 var scrollWidth = 2*screenWidth; // width of the rolling screen
 var screenHeight = 600;
+
+// asteroid parameters
 var asteroidScreenMargin=40;
+var asteroidCount=6;
+var asteroidSpawnXMin=(screenWidth/2)-200;
+var asteroidSpawnXMax=(screenWidth/2)+200;
+var asteroidSpawnYMin=0;
+var asteroidSpawnYMax=screenHeight;
+
+// spaceship parameters
+var spaceshipSpawnY=screenHeight/2;
 var spaceshipSpawnX=screenWidth/2;
 var spaceshipSpawnY=screenHeight/2;
+var spaceshipVelocity=140;
+var SpaceshipLife = 3;
+
+// UFO parameters
+var UFOSpawnY=screenHeight/2;
+var UFOSpawnX=screenWidth/2;
+var UFOSpawnY=screenHeight/2;
+var UFOVelocity=140;
+var UFOLife = 3;
 
 var config = {
     type: Phaser.AUTO,
@@ -29,7 +48,7 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'bullet')
         scene.add.existing(this)
-        this.setScale(0.1, 0.1)
+        this.setScale(0.3)
         scene.physics.add.existing(this)
         this.setCollideWorldBounds(true)
     }
@@ -71,39 +90,23 @@ Spaceship.prototype.vx = 0
 Spaceship.prototype.vy = 0
 
 Spaceship.prototype.moveUp = function() {
-    this.setVelocityY(-140);
-    this.vy = -140
-    // var that = this;
-    // setTimeout(function() {
-    //     that.setVelocityY(0);
-    // }, 2000);
+    this.setVelocityY(-spaceshipVelocity);
+    this.vy = -spaceshipVelocity;
 }
 
 Spaceship.prototype.moveDown = function() {
-    this.setVelocityY(140);
-    this.vy = 140
-    // var that = this;
-    // setTimeout(function() {
-    //     that.setVelocityY(0);
-    // }, 2000);
+    this.setVelocityY(spaceshipVelocity);
+    this.vy = spaceshipVelocity;
 }
 
 Spaceship.prototype.moveLeft = function() {
-    this.setVelocityX(-140);
-    this.vx = -140
-    // var that = this;
-    // setTimeout(function() {
-    //     that.setVelocityX(0);
-    // }, 2000);
+    this.setVelocityX(-spaceshipVelocity);
+    this.vx = -spaceshipVelocity;
 }
 
 Spaceship.prototype.moveRight = function() {
-    this.setVelocityX(140);
-    this.vx = 140
-    // var that = this;
-    // setTimeout(function() {
-    //     that.setVelocityX(0);
-    // }, 2000);
+    this.setVelocityX(spaceshipVelocity);
+    this.vx = spaceshipVelocity;
 }
 
 Spaceship.prototype.shoot = function () {
@@ -120,13 +123,22 @@ var game = new Phaser.Game(config);
 function preload() {
     this.load.image('spaceship', 'assets/Space Ship 3 Hearts.png');
     this.load.image('asteroid', 'assets/Small Asteroid.png');
+<<<<<<< HEAD
     this.load.image('lazer', 'assets/lazer space ship.png');
+=======
+    this.load.image('bullet', 'assets/bullet.png');
+    this.load.spritesheet('SpaceS2', 'assets/Space Ship 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('UFO2', 'assets/UFO 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('SUEXPLODE', 'assets/Exploding object.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('AEXPLODE', 'assets/ASTEROID BREAK.png', { frameWidth: 200, frameHeight: 200 });
+    this.load.image('UFO1', 'assets/UFO 1 Hearts.png');
+    this.load.image('SpaceS1', 'assets/Space Ship 1 Hearts.png');
+>>>>>>> origin/master
 }
 
 let spaceship;
 const asteroids = [];
 function create() {
-    
 
     spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY)
     this.input.keyboard.on('keydown_W', () => spaceship.moveUp(), this);
@@ -137,17 +149,38 @@ function create() {
 
 
     // placing the asteroids
-    for(var i = 0;i < 10; i++) {
-        // asteroids.create(500 + getRandomInt(-200, 200), 300 + getRandomInt(-300, 300), 'asteroid').setScale(0.1);
-        //asteroids.create(getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin), 'asteroid').setScale(0.1);
-        asteroids[i] = new Asteroid(this,getRandomInt(0+asteroidScreenMargin,screenWidth-asteroidScreenMargin),getRandomInt(0+asteroidScreenMargin,screenHeight-asteroidScreenMargin));
+    for(var i = 0; i < asteroidCount; i++) {
+        asteroids[i] = new Asteroid(this,getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),getRandomInt(asteroidSpawnYMin, asteroidSpawnYMax));
         
         this.physics.add.collider(spaceship, asteroids[i]);
     }
     
-
     //this.physics.add.collider(ufo, asteroids);
     //this.physics.add.collider(laser, asteroids);
+    function LSAnimation(){
+        if(SpaceshipLife === 2){
+          this.anims.create({
+              frames: this.anims.generateFrameNumbers('SpaceS2', { start: 0, end: 3 }),
+              frameRate: 8,
+              repeat: -1
+          });
+        }
+        if(SpaceshipLife === 1){
+          this.anims.create({
+              frames: this.anims.generateFrameNumbers('SpaceS1', { start: 0, end: 0 }),
+              frameRate: 8,
+              repeat: -1
+          });
+      }
+      if(SpaceshipLife === 0){
+          this.anims.create({
+              frames: this.anims.generateFrameNumbers('SUEXPLODE', { start: 0, end: 8 }),
+              frameRate: 20,
+              repeat: 0
+          });
+      }
+      }
+      
 }
 
 function update() {
