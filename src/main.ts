@@ -132,7 +132,7 @@ class UFO extends Phaser.Physics.Arcade.Sprite {
   }
 
   shoot(angle: number) {
-    const spaceshipLaser = new SpaceshipLaser(this.scene, this.x, this.y);
+    const ufoLaser = new UFOLaser(this.scene, this.x, this.y);
   }
 }
 
