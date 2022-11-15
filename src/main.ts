@@ -3,7 +3,6 @@ import * as Phaser from "phaser";
 
 // screen size and camera
 const screenWidth = 1000;
-const scrollWidth = 2 * screenWidth; // width of the rolling screen
 const screenHeight = 600;
 
 // asteroid parameters
@@ -41,13 +40,24 @@ const config: Phaser.Types.Core.GameConfig = {
 const bullets: Bullet[] = [];
 
 class Bullet extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, image("bullet"));
+  constructor(scene: Phaser.Scene, x: number, y: number, picture: keyof typeof images) {
+    super(scene, x, y, image(picture));
     scene.add.existing(this);
     this.setScale(0.3);
     scene.physics.add.existing(this);
     this.setCollideWorldBounds(true);
     bullets.push(this);
+  }
+}
+class UFOLaser extends Bullet {
+  constructor(scene: Phaser.Scene, x: number, y: number) {
+    super(scene, x, y, image("lazerUFO"));
+  }
+}
+
+class SpaceshipLaser extends Bullet {
+  constructor(scene: Phaser.Scene, x: number, y: number) {
+    super(scene, x, y, image("lazerSpaceship"));
   }
 }
 
@@ -82,7 +92,7 @@ class Spaceship extends Phaser.Physics.Arcade.Sprite {
   }
 
   shoot(angle: number) {
-    const bullet = new Bullet(this.scene, this.x, this.y);
+    const spaceshipLaser = new SpaceshipLaser (this.scene, this.x, this.y);
   }
 }
 
@@ -125,6 +135,8 @@ const images = {
   asteroid: "assets/Small Asteroid.png",
   bullet: "assets/bullet.png",
   blackhole: "assets/blackhole.png",
+  lazerSpaceship: "assets/LAZER SPACE SHIP.png",
+  lazerUFO: "assets/LAZER UFO.png"
 } as const;
 
 // compile time image name checking
@@ -183,9 +195,6 @@ function create(this: Phaser.Scene) {
     this.physics.add.collider(spaceship, asteroids[i]);
   }
 
-  // this.physics.add.collider(ufo, asteroids);
-  // this.physics.add.collider(laser, asteroids);
-
   const input = document.querySelector("#angle") as HTMLInputElement;
   const runButton = document.querySelector("#run") as HTMLButtonElement;
 
@@ -212,13 +221,7 @@ function update(this: Phaser.Scene) {
     });
   });
 
-  // this.physics.collide(laser, asteroids, impact);
 }
-
-//  function impact(laser, asteroid) {
-//  asteroid.destroy();
-//  laser.setActive(false).setVisible(false);
-//  }
 
 function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);
