@@ -52,8 +52,6 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
 }
 
 class Spaceship extends Phaser.Physics.Arcade.Sprite {
-  vx: number = 0;
-  vy: number = 0;
   alive: boolean = true;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -68,29 +66,23 @@ class Spaceship extends Phaser.Physics.Arcade.Sprite {
   }
 
   moveUp() {
-    this.setVelocityY(-spaceshipVelocity);
-    this.vy = -spaceshipVelocity;
+    this.body.velocity.y = -spaceshipVelocity;
   }
 
   moveDown() {
-    this.setVelocityY(spaceshipVelocity);
-    this.vy = spaceshipVelocity;
+    this.body.velocity.y = spaceshipVelocity;
   }
 
   moveLeft() {
-    this.setVelocityX(-spaceshipVelocity);
-    this.vx = -spaceshipVelocity;
+    this.body.velocity.x = -spaceshipVelocity;
   }
 
   moveRight() {
-    this.setVelocityX(spaceshipVelocity);
-    this.vx = spaceshipVelocity;
+    this.body.velocity.x = spaceshipVelocity;
   }
 
   shoot(angle: number) {
     const bullet = new Bullet(this.scene, this.x, this.y);
-    bullet.setVelocityX(200 * Math.cos((angle / 360) * 2 * Math.PI));
-    bullet.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
 }
 
@@ -108,6 +100,17 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+const blackHoles: BlackHole[] = [];
+
+class BlackHole extends Phaser.Physics.Arcade.Sprite {
+  constructor(scene: Phaser.Scene, x: number, y: number) {
+    super(scene, x, y, image("blackhole"));
+    scene.add.existing(this);
+    blackHoles.push(this);
+    scene.physics.add.existing(this);
+  }
+}
+
 // Define the game
 var game = new Phaser.Game(config);
 
@@ -121,6 +124,7 @@ const images = {
   spaceship: "assets/Space Ship 3 Hearts.png",
   asteroid: "assets/Small Asteroid.png",
   bullet: "assets/bullet.png",
+  blackhole: "assets/blackhole.png",
 } as const;
 
 // compile time image name checking
@@ -188,13 +192,25 @@ function create(this: Phaser.Scene) {
   runButton.addEventListener("click", () => {
     spaceship.shoot(-parseInt(input.value));
   });
+
+  // for (let i = 0; i < 10; i++) {
+  //   new BlackHole(this, getRandomInt(1, 1000), getRandomInt(1, 1000));
+  // }
 }
 
 function update(this: Phaser.Scene) {
-  spaceship.vx *= 0.98;
-  spaceship.vy *= 0.98;
-  spaceship.setVelocityX(spaceship.vx);
-  spaceship.setVelocityY(spaceship.vy);
+  spaceship.body.velocity.x *= 0.98;
+  spaceship.body.velocity.y *= 0.98;
+
+  bullets.forEach((bullet) => {
+    blackHoles.forEach((hole) => {
+      const holePos = hole.body.position
+        .clone()
+        .add(new Phaser.Math.Vector2(hole.width / 2, hole.height / 2));
+      const rHat = holePos.clone().subtract(bullet.body.position).normalize();
+      bullet.body.velocity.add(rHat);
+    });
+  });
 
   // this.physics.collide(laser, asteroids, impact);
 }
