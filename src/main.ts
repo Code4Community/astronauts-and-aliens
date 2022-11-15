@@ -83,6 +83,8 @@ class Spaceship extends Phaser.Physics.Arcade.Sprite {
 
   shoot(angle: number) {
     const bullet = new Bullet(this.scene, this.x, this.y);
+    bullet.body.velocity.set(Math.cos(angle), Math.sin(angle));
+    bullet.body.velocity.scale(100);
   }
 }
 
@@ -196,7 +198,27 @@ function create(this: Phaser.Scene) {
   // for (let i = 0; i < 10; i++) {
   //   new BlackHole(this, getRandomInt(1, 1000), getRandomInt(1, 1000));
   // }
+
+  smartCollider(this, bullets, asteroids, (bullet, astroid) => {
+    bullet.destroy();
+    bullets.splice(bullets.indexOf(bullet), 1);
+    astroid.destroy();
+    asteroids.splice(asteroids.indexOf(astroid), 1);
+    spaceship.setTexture(image("rover"));
+  });
 }
+
+const smartCollider = <
+  A extends Phaser.Types.Physics.Arcade.GameObjectWithBody,
+  B extends Phaser.Types.Physics.Arcade.GameObjectWithBody
+>(
+  scene: Phaser.Scene,
+  a: A | A[],
+  b: B | B[],
+  callback: (a: A, b: B) => void
+) => {
+  scene.physics.add.collider(a, b, callback as ArcadePhysicsCallback);
+};
 
 function update(this: Phaser.Scene) {
   spaceship.body.velocity.x *= 0.98;
@@ -219,6 +241,15 @@ function update(this: Phaser.Scene) {
 //  asteroid.destroy();
 //  laser.setActive(false).setVisible(false);
 //  }
+
+abstract class Action {
+  abstract run(): Promise<void>;
+}
+
+async function runActions(actions: Action[]) {
+  await actions[0].run();
+  setTimeout(() => runActions(actions.slice(1)), 1000);
+}
 
 function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);
