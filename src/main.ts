@@ -19,6 +19,11 @@ const spaceshipSpawnY = screenHeight / 2;
 const spaceshipSpawnX = screenWidth / 2;
 const spaceshipVelocity = 140;
 
+//ufo parameters
+const ufoSpawnY = screenHeight / 2;
+const ufoSpawnX = screenWidth / 2;
+const ufoVelocity = 140;
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
@@ -86,6 +91,41 @@ class Spaceship extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+class UFO extends Phaser.Physics.Arcade.Sprite {
+  alive: boolean = true;
+
+  constructor(scene: Phaser.Scene, x: number, y: number) {
+    // When we determine the file name of the sprite for spaceship we need
+    // to replace 'Spaceship' with the file name
+    super(scene, x, y, image("ufo"));
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
+    this.setScale(0.8, 0.8);
+    this.setBounce(0.3);
+    this.setCollideWorldBounds(true);
+  }
+
+  moveUp() {
+    this.body.velocity.y = -ufoVelocity;
+  }
+
+  moveDown() {
+    this.body.velocity.y = ufoVelocity;
+  }
+
+  moveLeft() {
+    this.body.velocity.x = -ufoVelocity;
+  }
+
+  moveRight() {
+    this.body.velocity.x = ufoVelocity;
+  }
+
+  shoot(angle: number) {
+    const bullet = new Bullet(this.scene, this.x, this.y);
+  }
+}
+
 class Asteroid extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     // When we determine the file name of the sprite for spaceship we need
@@ -125,6 +165,7 @@ const images = {
   asteroid: "assets/Small Asteroid.png",
   bullet: "assets/bullet.png",
   blackhole: "assets/blackhole.png",
+  ufo: "assets/UFO 3 Hearts.png",
 } as const;
 
 // compile time image name checking
