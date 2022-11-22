@@ -66,48 +66,57 @@ class SpaceshipLaser extends Bullet {
   }
 }
 
-class Spaceship extends Phaser.Physics.Arcade.Sprite {
+class Vehicle extends Phaser.Physics.Arcade.Sprite {
   alive: boolean = true;
+  velo: number;
+  bulletType: typeof Bullet;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, picture: keyof typeof images, velo: number, bulletType: typeof Bullet = Bullet) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
-    super(scene, x, y, image("spaceship"));
+    super(scene, x, y, image(picture));
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(0.8, 0.8);
     this.setBounce(0.3);
     this.setCollideWorldBounds(true);
+    this.velo = velo;
+    this.bulletType = bulletType;
   }
 
   moveUp() {
-    this.body.velocity.y = -spaceshipVelocity;
+    this.body.velocity.y = -this.velo;
   }
 
   moveDown() {
-    this.body.velocity.y = spaceshipVelocity;
+    this.body.velocity.y = this.velo;
   }
 
   moveLeft() {
-    this.body.velocity.x = -spaceshipVelocity;
+    this.body.velocity.x = -this.velo;
   }
 
   moveRight() {
-    this.body.velocity.x = spaceshipVelocity;
+    this.body.velocity.x = this.velo;
   }
 
   shoot(angle: number) {
-    const spaceshipLaser = new SpaceshipLaser (this.scene, this.x, this.y);
+    // 'bullet' argument is only there bc Bullet constructor has 4 parameters. SpaceshipLaser and UFOLaser each have 3 parameters.
+    // However, this.bulletType should never be Bullet, it should always be SpaceshipLaser or UFOLaser.
+    const laser = new this.bulletType (this.scene, this.x, this.y, 'bullet');
+    laser.setVelocityX(200 * Math.cos((angle / 360) * 2 * Math.PI));
+    laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
+
 }
 
-class UFO extends Phaser.Physics.Arcade.Sprite {
+class Spaceship extends Vehicle {
   alive: boolean = true;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
-    super(scene, x, y, image("ufo"));
+    super(scene, x, y, image("spaceship"), spaceshipVelocity, SpaceshipLaser);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(0.8, 0.8);
@@ -115,24 +124,20 @@ class UFO extends Phaser.Physics.Arcade.Sprite {
     this.setCollideWorldBounds(true);
   }
 
-  moveUp() {
-    this.body.velocity.y = -ufoVelocity;
-  }
+}
 
-  moveDown() {
-    this.body.velocity.y = ufoVelocity;
-  }
+class UFO extends Vehicle {
+  alive: boolean = true;
 
-  moveLeft() {
-    this.body.velocity.x = -ufoVelocity;
-  }
-
-  moveRight() {
-    this.body.velocity.x = ufoVelocity;
-  }
-
-  shoot(angle: number) {
-    const ufoLaser = new UFOLaser(this.scene, this.x, this.y);
+  constructor(scene: Phaser.Scene, x: number, y: number) {
+    // When we determine the file name of the sprite for spaceship we need
+    // to replace 'Spaceship' with the file name
+    super(scene, x, y, image("ufo"), ufoVelocity, UFOLaser);
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
+    this.setScale(0.8, 0.8);
+    this.setBounce(0.3);
+    this.setCollideWorldBounds(true);
   }
 }
 
@@ -165,19 +170,13 @@ class BlackHole extends Phaser.Physics.Arcade.Sprite {
 var game = new Phaser.Game(config);
 
 const images = {
-  nightSky: "assets/BACKROUND.png",
-  ground: "assets/Obstacle.png",
-  rover: "assets/Rover.png",
-  num1: "assets/numbers/number1.png",
-  num2: "assets/numbers/number2.png",
-  num3: "assets/numbers/number3.png",
   spaceship: "assets/Space Ship 3 Hearts.png",
+  ufo: "assets/UFO 3 Hearts.png",
   asteroid: "assets/Small Asteroid.png",
   bullet: "assets/bullet.png",
   blackhole: "assets/blackhole.png",
   lazerSpaceship: "assets/LAZER SPACE SHIP.png",
-  lazerUFO: "assets/LAZER UFO.png",
-  ufo: "assets/UFO 3 Hearts.png"
+  lazerUFO: "assets/LAZER UFO.png"
 } as const;
 
 // compile time image name checking
@@ -204,6 +203,7 @@ function preload(this: Phaser.Scene) {
 }
 
 let spaceship: Spaceship;
+let ufo: UFO;
 const asteroids: Asteroid[] = [];
 
 function create(this: Phaser.Scene) {
@@ -216,6 +216,7 @@ function create(this: Phaser.Scene) {
     );
 
   spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY);
+  ufo = new UFO(this, ufoSpawnX, ufoSpawnY);
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "w") spaceship.moveUp();
@@ -223,6 +224,14 @@ function create(this: Phaser.Scene) {
     if (event.key === "s") spaceship.moveDown();
     if (event.key === "d") spaceship.moveRight();
     if (event.key === "q") spaceship.shoot(45);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowUp") ufo.moveUp();
+    if (event.key === "ArrowLeft") ufo.moveLeft();
+    if (event.key === "ArrowDown") ufo.moveDown();
+    if (event.key === "ArrowRight") ufo.moveRight();
+    if (event.key === "p") ufo.shoot(45);
   });
 
   // placing the asteroids
@@ -234,6 +243,8 @@ function create(this: Phaser.Scene) {
     );
 
     this.physics.add.collider(spaceship, asteroids[i]);
+    this.physics.add.collider(ufo, asteroids[i]);
+    this.physics.add.collider(spaceship, ufo);
   }
 
   const input = document.querySelector("#angle") as HTMLInputElement;
@@ -251,6 +262,8 @@ function create(this: Phaser.Scene) {
 function update(this: Phaser.Scene) {
   spaceship.body.velocity.x *= 0.98;
   spaceship.body.velocity.y *= 0.98;
+  ufo.body.velocity.x *= 0.98;
+  ufo.body.velocity.y *= 0.98;
 
   bullets.forEach((bullet) => {
     blackHoles.forEach((hole) => {
