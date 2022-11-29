@@ -223,7 +223,7 @@ function create(this: Phaser.Scene) {
     if (event.key === "a") spaceship.moveLeft();
     if (event.key === "s") spaceship.moveDown();
     if (event.key === "d") spaceship.moveRight();
-    // if (event.key === "q") spaceship.shoot(0, -102, 6);
+    if (event.key === "q") spaceship.shoot(-parseInt(input.value), -102, 6);
   });
 
   document.addEventListener("keydown", (event) => {
