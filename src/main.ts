@@ -188,6 +188,10 @@ function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
   }
+  this.load.spritesheet('Asteroid Break', 
+        'assets/ASTEROID BREAK.png',
+        { frameWidth: 32, frameHeight: 32 }
+    );
   //   this.load.spritesheet("humanobstacle", "assets/humanObstacles.png", {
   //     frameWidth: 64,
   //     frameHeight: 64,
@@ -207,6 +211,15 @@ let ufo: UFO;
 const asteroids: Asteroid[] = [];
 
 function create(this: Phaser.Scene) {
+
+  this.anims.create({
+    key: 'destroy_asteroid',
+    frames: this.anims.generateFrameNumbers('ASTEROID BREAK', { start: 0, end: 16 }),
+    frameRate: 16,
+    repeat: -1
+  });
+
+
   for (let i = 0; i < 100; i++)
     this.add.circle(
       getRandomInt(0, this.renderer.width),
@@ -300,6 +313,7 @@ function update(this: Phaser.Scene) {
     } else {
       asteroids.forEach((rock)=> {
         this.physics.collide(bullet,rock,()=> {
+          rock.anims.play('destroy_asteroid');
           rock.destroy();
           bullet.destroy();
           return;
