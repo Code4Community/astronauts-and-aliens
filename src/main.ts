@@ -15,12 +15,12 @@ const asteroidSpawnYMax = screenHeight;
 
 // spaceship parameters
 const spaceshipSpawnY = screenHeight / 2;
-const spaceshipSpawnX = screenWidth / 2;
+const spaceshipSpawnX = screenWidth / 2 - screenWidth / 2.5;
 const spaceshipVelocity = 140;
 
 //ufo parameters
 const ufoSpawnY = screenHeight / 2;
-const ufoSpawnX = screenWidth / 2;
+const ufoSpawnX = screenWidth / 2 + screenWidth / 2.5;
 const ufoVelocity = 140;
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -112,10 +112,15 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.body.velocity.x = this.velo;
   }
 
-  shoot(angle: number) {
+  shoot(angle: number, xOffset = 0, yOffset = 0) {
     // 'bullet' argument is only there bc Bullet constructor has 4 parameters. SpaceshipLaser and UFOLaser each have 3 parameters.
     // However, this.bulletType should never be Bullet, it should always be SpaceshipLaser or UFOLaser.
-    const laser = new this.bulletType(this.scene, this.x, this.y, "bullet");
+    const laser = new this.bulletType(
+      this.scene,
+      this.x - xOffset,
+      this.y - yOffset,
+      "bullet"
+    );
     laser.setVelocityX(200 * Math.cos((angle / 360) * 2 * Math.PI));
     laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
@@ -246,7 +251,7 @@ function create(this: Phaser.Scene) {
     if (event.key === "a") spaceship.moveLeft();
     if (event.key === "s") spaceship.moveDown();
     if (event.key === "d") spaceship.moveRight();
-    if (event.key === "q") spaceship.shoot(45);
+    if (event.key === "q") spaceship.shoot(-parseInt(input.value), -102, 6);
   });
 
   document.addEventListener("keydown", (event) => {
@@ -254,7 +259,9 @@ function create(this: Phaser.Scene) {
     if (event.key === "ArrowLeft") ufo.moveLeft();
     if (event.key === "ArrowDown") ufo.moveDown();
     if (event.key === "ArrowRight") ufo.moveRight();
-    if (event.key === "p") ufo.shoot(45);
+    // shoot at 180 degrees,
+    // offset bullet position so it appears to emerge from sprite's gun
+    if (event.key === "p") ufo.shoot(180, 88, 27);
   });
 
   // placing the asteroids
@@ -274,7 +281,9 @@ function create(this: Phaser.Scene) {
   const runButton = document.querySelector("#run") as HTMLButtonElement;
 
   runButton.addEventListener("click", () => {
-    spaceship.shoot(-parseInt(input.value));
+    // shoot at 180 degrees,
+    // offset bullet position so it appears to emerge from sprite's gun
+    spaceship.shoot(-parseInt(input.value), -102, 6);
   });
 
   // for (let i = 0; i < 10; i++) {
@@ -301,6 +310,34 @@ function update(this: Phaser.Scene) {
   stars.forEach((star) => {
     star.x -= star.radius * 0.2;
     if (star.x < 0) star.x += this.renderer.width;
+  });
+  bullets.forEach((bullet) => {
+    let destroy: Boolean;
+    destroy = false;
+    if (bullet instanceof UFOLaser) {
+      this.physics.collide(bullet, spaceship, () => {
+        //modify to remove lives/hearts once that feature is available
+        spaceship.setVisible(false);
+        destroy = true;
+      });
+    } else if (bullet instanceof SpaceshipLaser) {
+      this.physics.collide(bullet, ufo, () => {
+        //modify to remove lives/hearts once that feature is available
+        ufo.setVisible(false);
+        destroy = true;
+      });
+    }
+    if (destroy) {
+      bullet.destroy();
+    } else {
+      asteroids.forEach((rock) => {
+        this.physics.collide(bullet, rock, () => {
+          rock.destroy();
+          bullet.destroy();
+          return;
+        });
+      });
+    }
   });
 }
 
