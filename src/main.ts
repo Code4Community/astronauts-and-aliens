@@ -275,6 +275,22 @@ function update(this: Phaser.Scene) {
     });
   });
 
+  bullets.forEach((bullet)=> {
+    if(bullet instanceof UFOLaser){
+      this.physics.collide(bullet,spaceship,()=>{
+        //modify to remove lives/hearts once that feature is available
+        spaceship.setVisible(false);
+        bullet.destroy();
+      });
+    } else if(bullet instanceof SpaceshipLaser){
+      this.physics.collide(bullet,ufo,()=>{
+        //modify to remove lives/hearts once that feature is available
+        ufo.setVisible(false);
+        bullet.destroy();
+      });
+    }
+  });
+
 }
 
 function getRandomInt(min: number, max: number): number {
