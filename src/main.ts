@@ -100,10 +100,10 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.body.velocity.x = this.velo;
   }
 
-  shoot(angle: number) {
+  shoot(angle: number, xOffset=0, yOffset=0) {
     // 'bullet' argument is only there bc Bullet constructor has 4 parameters. SpaceshipLaser and UFOLaser each have 3 parameters.
     // However, this.bulletType should never be Bullet, it should always be SpaceshipLaser or UFOLaser.
-    const laser = new this.bulletType (this.scene, this.x, this.y, 'bullet');
+    const laser = new this.bulletType (this.scene, this.x-xOffset, this.y-yOffset, 'bullet');
     laser.setVelocityX(200 * Math.cos((angle / 360) * 2 * Math.PI));
     laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
@@ -231,7 +231,9 @@ function create(this: Phaser.Scene) {
     if (event.key === "ArrowLeft") ufo.moveLeft();
     if (event.key === "ArrowDown") ufo.moveDown();
     if (event.key === "ArrowRight") ufo.moveRight();
-    if (event.key === "p") ufo.shoot(45);
+    // shoot at 180 degrees, 
+    // offset bullet position so it appears to emerge from sprite's gun
+    if (event.key === "p") ufo.shoot(180, 88, 27);
   });
 
   // placing the asteroids
@@ -251,7 +253,9 @@ function create(this: Phaser.Scene) {
   const runButton = document.querySelector("#run") as HTMLButtonElement;
 
   runButton.addEventListener("click", () => {
-    spaceship.shoot(-parseInt(input.value));
+    // shoot at 180 degrees, 
+    // offset bullet position so it appears to emerge from sprite's gun
+    spaceship.shoot(-parseInt(input.value), -102, 6);
   });
 
   // for (let i = 0; i < 10; i++) {
