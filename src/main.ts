@@ -279,6 +279,36 @@ function update(this: Phaser.Scene) {
     });
   });
 
+  bullets.forEach((bullet)=> {
+    let destroy: Boolean;
+    destroy = false;
+    if(bullet instanceof UFOLaser){
+      this.physics.collide(bullet,spaceship,()=>{
+        //modify to remove lives/hearts once that feature is available
+        spaceship.setVisible(false);
+        destroy = true;
+      });
+    } else if(bullet instanceof SpaceshipLaser){
+      this.physics.collide(bullet,ufo,()=>{
+        //modify to remove lives/hearts once that feature is available
+        ufo.setVisible(false);
+        destroy = true;
+      });
+    }
+    if(destroy){
+      bullet.destroy();
+    } else {
+      asteroids.forEach((rock)=> {
+        this.physics.collide(bullet,rock,()=> {
+          rock.destroy();
+          bullet.destroy();
+          return;
+        })
+      })
+    }
+
+  });
+
 }
 
 function getRandomInt(min: number, max: number): number {
