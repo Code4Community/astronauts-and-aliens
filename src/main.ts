@@ -5,14 +5,6 @@ import * as Phaser from "phaser";
 const screenWidth = 1000;
 const screenHeight = 600;
 
-// asteroid parameters
-const asteroidScreenMargin = 40;
-const asteroidCount = 6;
-const asteroidSpawnXMin = screenWidth / 2 - 200;
-const asteroidSpawnXMax = screenWidth / 2 + 200;
-const asteroidSpawnYMin = 0;
-const asteroidSpawnYMax = screenHeight;
-
 // spaceship parameters
 const spaceshipSpawnY = screenHeight / 2;
 const spaceshipSpawnX = (screenWidth / 2)-(screenWidth/2.5);
@@ -237,16 +229,34 @@ function create(this: Phaser.Scene) {
   });
 
   // placing the asteroids
-  for (let i = 0; i < asteroidCount; i++) {
-    asteroids[i] = new Asteroid(
-      this,
-      getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
-      getRandomInt(asteroidSpawnYMin, asteroidSpawnYMax)
-    );
+  const asteroidSpawnXMin= (screenWidth/2)-(screenWidth/4);
+  const asteroidSpawnXMax= (screenWidth/2)+(screenWidth/4);
 
-    this.physics.add.collider(spaceship, asteroids[i]);
-    this.physics.add.collider(ufo, asteroids[i]);
-    this.physics.add.collider(spaceship, ufo);
+  const asteroidSpawnYMin= 50;
+  const asteroidSpawnYMax= screenHeight-50;
+
+  const asteroidCount = 8;
+  const asteroidHeight=(asteroidSpawnYMax-asteroidSpawnYMin)/asteroidCount;
+  let asteroidSpawnChance=90; //percent chance to spawn asteroid
+  
+  for (let i = 0; i < asteroidCount; i++) {
+    // if an asteroid is chosen to be spawned
+    if(getRandomInt(0,99)<asteroidSpawnChance) {
+      asteroidSpawnChance-=10;
+      // create asteroid and add colliders
+      asteroids[i] = new Asteroid(
+        this,
+        getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
+        asteroidSpawnYMin+(i*asteroidHeight)
+      );
+
+      this.physics.add.collider(spaceship, asteroids[i]);
+      this.physics.add.collider(ufo, asteroids[i]);
+      this.physics.add.collider(spaceship, ufo);
+    }
+    else {
+      asteroidSpawnChance+=10;
+    }
   }
 
   const input = document.querySelector("#angle") as HTMLInputElement;
