@@ -1,5 +1,6 @@
 import "./style.css";
 import * as Phaser from "phaser";
+import { Peer, DataConnection } from "peerjs";
 
 // screen size and camera
 const screenWidth = 1000;
@@ -14,6 +15,15 @@ const spaceshipVelocity = 140;
 const ufoSpawnY = screenHeight / 2;
 const ufoSpawnX = screenWidth / 2 + screenWidth / 2.5;
 const ufoVelocity = 140;
+
+let peer: Peer;
+let connection: DataConnection;
+let player: Player;
+
+enum Player {
+  SPACESHIP,
+  UFO,
+}
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -44,7 +54,7 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
     y: number,
     picture: keyof typeof images
   ) {
-    super(scene, x, y, image(picture));
+    super(scene, x, y, picture);
     scene.add.existing(this);
     this.setScale(0.3);
     scene.physics.add.existing(this);
@@ -53,20 +63,40 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
 }
 class UFOLaser extends Bullet {
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, image("lazerUFO"));
+    super(scene, x, y, "lazerUFO");
   }
 }
 
 class SpaceshipLaser extends Bullet {
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, image("lazerSpaceship"));
+    super(scene, x, y, "lazerSpaceship");
   }
 }
+
+type BulletConstructor = {
+  new (scene: Phaser.Scene, x: number, y: number): Bullet;
+};
+
+// declare global {
+//   namespace Phaser.Physics {
+//     interface Arcade {
+//       Sprite: {
+//         new (
+//           scene: Phaser.Scene,
+//           x: number,
+//           y: number,
+//           texture: keyof typeof images | Phaser.Textures.Texture,
+//           frame?: string | number
+//         ): Phaser.Physics.Arcade.Sprite;
+//       };
+//     }
+//   }
+// }
 
 class Vehicle extends Phaser.Physics.Arcade.Sprite {
   alive: boolean = true;
   velo: number;
-  bulletType: typeof Bullet;
+  bulletType: BulletConstructor;
 
   constructor(
     scene: Phaser.Scene,
@@ -74,11 +104,11 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     y: number,
     picture: keyof typeof images,
     velo: number,
-    bulletType: typeof Bullet = Bullet
+    bulletType: BulletConstructor
   ) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
-    super(scene, x, y, image(picture));
+    super(scene, x, y, picture);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(0.8, 0.8);
@@ -110,8 +140,7 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     const laser = new this.bulletType(
       this.scene,
       this.x - xOffset,
-      this.y - yOffset,
-      "bullet"
+      this.y - yOffset
     );
     laser.setVelocityX(200 * Math.cos((angle / 360) * 2 * Math.PI));
     laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
@@ -124,7 +153,7 @@ class Spaceship extends Vehicle {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
-    super(scene, x, y, image("spaceship"), spaceshipVelocity, SpaceshipLaser);
+    super(scene, x, y, "spaceship", spaceshipVelocity, SpaceshipLaser);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(0.8, 0.8);
@@ -139,7 +168,7 @@ class UFO extends Vehicle {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
-    super(scene, x, y, image("ufo"), ufoVelocity, UFOLaser);
+    super(scene, x, y, "ufo", ufoVelocity, UFOLaser);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(0.8, 0.8);
@@ -152,7 +181,7 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
-    super(scene, x, y, image("asteroid"));
+    super(scene, x, y, "asteroid");
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(0.8, 0.8);
@@ -166,7 +195,7 @@ const blackHoles: BlackHole[] = [];
 
 class BlackHole extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, image("blackhole"));
+    super(scene, x, y, "blackhole");
     scene.add.existing(this);
     blackHoles.push(this);
     scene.physics.add.existing(this);
@@ -176,7 +205,7 @@ class BlackHole extends Phaser.Physics.Arcade.Sprite {
 // Define the game
 var game = new Phaser.Game(config);
 
-const images = {
+const images: Record<string, string> = {
   spaceship: "assets/Space Ship 3 Hearts.png",
   ufo: "assets/UFO 3 Hearts.png",
   asteroid: "assets/Small Asteroid.png",
@@ -185,11 +214,6 @@ const images = {
   lazerSpaceship: "assets/LAZER SPACE SHIP.png",
   lazerUFO: "assets/LAZER UFO.png",
 } as const;
-
-// compile time image name checking
-function image(name: keyof typeof images) {
-  return name;
-}
 
 function preload(this: Phaser.Scene) {
   for (const name in images) {
@@ -241,29 +265,30 @@ function create(this: Phaser.Scene) {
 
   document.addEventListener("keydown", (event) => {
     let cancel = true;
-    if (event.key === "w") spaceship.moveUp();
-    else if (event.key === "a") spaceship.moveLeft();
-    else if (event.key === "s") spaceship.moveDown();
-    else if (event.key === "d") spaceship.moveRight();
-    else if (event.key === "q") spaceship.shoot(0, -102, 6);
-    else cancel = false;
+    const vehicle = player === Player.SPACESHIP ? spaceship : ufo;
+    if (event.key === "w") {
+      vehicle.moveUp();
+      connection.send({ type: "up" });
+    } else if (event.key === "a") {
+      vehicle.moveLeft();
+      connection.send({ type: "left" });
+    } else if (event.key === "s") {
+      vehicle.moveDown();
+      connection.send({ type: "down" });
+    } else if (event.key === "d") {
+      vehicle.moveRight();
+      connection.send({ type: "right" });
+    } else if (event.key === "q") {
+      if (vehicle === spaceship) {
+        vehicle.shoot(0, -102, 6);
+      } else {
+        vehicle.shoot(180, 88, 27);
+      }
+      connection.send({ type: "shoot" });
+    } else cancel = false;
     if (cancel) event.preventDefault();
-  });
+  }); // placing the asteroids
 
-  document.addEventListener("keydown", (event) => {
-    let cancel = true;
-    if (event.key === "ArrowUp") ufo.moveUp();
-    else if (event.key === "ArrowLeft") ufo.moveLeft();
-    else if (event.key === "ArrowDown") ufo.moveDown();
-    else if (event.key === "ArrowRight") ufo.moveRight();
-    // shoot at 180 degrees,
-    // offset bullet position so it appears to emerge from sprite's gun
-    else if (event.key === "p") ufo.shoot(180, 88, 27);
-    else cancel = false;
-    if (cancel) event.preventDefault();
-  });
-
-  // placing the asteroids
   const asteroidSpawnXMin = screenWidth / 2 - screenWidth / 4;
   const asteroidSpawnXMax = screenWidth / 2 + screenWidth / 4;
 
@@ -303,15 +328,65 @@ function create(this: Phaser.Scene) {
     spaceship.shoot(-parseInt(input.value), -102, 6);
   });
 
+  const startMultiplayerButton = document.querySelector(
+    "#begin-multiplayer"
+  ) as HTMLButtonElement;
+  const joinMultiplayerButton = document.querySelector(
+    "#join-multiplayer"
+  ) as HTMLButtonElement;
+
+  const randomID = (length: number) => {
+    const letters = [...Array(26).keys()].map((i) =>
+      String.fromCharCode(i + "A".charCodeAt(0))
+    );
+    return Array(length)
+      .fill(0)
+      .map((_) => letters[getRandomInt(0, letters.length)])
+      .join("");
+  };
+
+  const PREFIX = "astronauts-and-aliens-";
+
+  startMultiplayerButton.addEventListener("click", () => {
+    const code = randomID(5);
+    peer = new Peer(`${PREFIX}${code}`);
+    player = Player.SPACESHIP;
+    alert(`Your game code is ${code}.`);
+    peer.on("open", () => {
+      peer.on("connection", (c) => {
+        connection = c;
+        connection.on("open", () => {
+          connection.on("data", (data) =>
+            handleData(data as MultiplayerDataPacket)
+          );
+        });
+      });
+    });
+  });
+
+  joinMultiplayerButton.addEventListener("click", () => {
+    const code = prompt(`Enter the game code:`);
+    peer = new Peer();
+    player = Player.UFO;
+    peer.on("open", () => {
+      connection = peer.connect(`${PREFIX}${code}`);
+      connection.on("open", () => {
+        connection.on("data", (data) =>
+          handleData(data as MultiplayerDataPacket)
+        );
+      });
+    });
+  });
+
   // for (let i = 0; i < 10; i++) {
   //   new BlackHole(this, getRandomInt(1, 1000), getRandomInt(1, 1000));
   // }
 
-  smartCollider(this, bullets, asteroids, (bullet, astroid) => {
+  smartCollider(this, bullets, asteroids, (bullet, asteroid) => {
     bullet.destroy();
-    astroid.destroy();
+    asteroid.destroy();
     bulletsToRemove.push(bullet);
-    asteroidsToRemove.push(astroid);
+    asteroidsToRemove.push(asteroid);
   });
   smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
@@ -361,7 +436,8 @@ function update(this: Phaser.Scene) {
       bullet.body.position.y > this.renderer.height + bullet.body.height
     ) {
       bullet.destroy();
-      console.log("DONE");
+      bulletsToRemove.push(bullet);
+      return;
     }
     blackHoles.forEach((hole) => {
       const holePos = hole.body.position
@@ -396,3 +472,39 @@ function getRandomInt(min: number, max: number): number {
 function getRandomDouble(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
+
+type MultiplayerDataPacket =
+  | {
+      type: "shoot" | "up" | "down" | "left" | "right";
+    }
+  | {
+      type: "asteroid";
+      position: { x: number; y: number };
+    };
+
+const handleData = (data: MultiplayerDataPacket) => {
+  const otherVehicle = player === Player.SPACESHIP ? ufo : spaceship;
+  switch (data.type) {
+    case "shoot":
+      if (player === Player.SPACESHIP) {
+        otherVehicle.shoot(180, 88, 27);
+      } else {
+        otherVehicle.shoot(0, -102, 6);
+      }
+      break;
+    case "up":
+      otherVehicle.moveUp();
+      break;
+    case "down":
+      otherVehicle.moveDown();
+      break;
+    case "left":
+      otherVehicle.moveLeft();
+      break;
+    case "right":
+      otherVehicle.moveRight();
+      break;
+    case "asteroid":
+      break;
+  }
+};
