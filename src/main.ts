@@ -35,6 +35,7 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const bullets: Bullet[] = [];
+let bulletsToRemove: Bullet[] = [];
 
 class Bullet extends Phaser.Physics.Arcade.Sprite {
   constructor(
@@ -47,7 +48,6 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     this.setScale(0.3);
     scene.physics.add.existing(this);
-    this.setCollideWorldBounds(true);
     bullets.push(this);
   }
 }
@@ -213,6 +213,7 @@ function preload(this: Phaser.Scene) {
 let spaceship: Spaceship;
 let ufo: UFO;
 const asteroids: Asteroid[] = [];
+let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
 
@@ -284,14 +285,14 @@ function create(this: Phaser.Scene) {
         getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
         asteroidSpawnYMin + i * asteroidHeight
       );
-
-      this.physics.add.collider(spaceship, asteroids[i]);
-      this.physics.add.collider(ufo, asteroids[i]);
-      this.physics.add.collider(spaceship, ufo);
     } else {
       asteroidSpawnChance += 10;
     }
   }
+
+  this.physics.add.collider(spaceship, asteroids);
+  this.physics.add.collider(ufo, asteroids);
+  this.physics.add.collider(spaceship, ufo);
 
   const input = document.querySelector("#angle") as HTMLInputElement;
   const runButton = document.querySelector("#run") as HTMLButtonElement;
@@ -307,10 +308,24 @@ function create(this: Phaser.Scene) {
   // }
 
   smartCollider(this, bullets, asteroids, (bullet, astroid) => {
-    // bullet.destroy();
-    // bullets.splice(bullets.indexOf(bullet), 1);
-    // astroid.destroy();
-    // asteroids.splice(asteroids.indexOf(astroid), 1);
+    bullet.destroy();
+    astroid.destroy();
+    bulletsToRemove.push(bullet);
+    asteroidsToRemove.push(astroid);
+  });
+  smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
+    if (bullet instanceof UFOLaser) {
+      spaceship.setVisible(false);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
+    }
+  });
+  smartCollider(this, bullets, ufo, (bullet, ufo) => {
+    if (bullet instanceof SpaceshipLaser) {
+      ufo.setVisible(false);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
+    }
   });
 }
 
@@ -332,7 +347,22 @@ function update(this: Phaser.Scene) {
   ufo.body.velocity.x *= 0.98;
   ufo.body.velocity.y *= 0.98;
 
+  bulletsToRemove.forEach((b) => bullets.splice(bullets.indexOf(b), 1));
+  asteroidsToRemove.forEach((a) => asteroids.splice(asteroids.indexOf(a), 1));
+
+  bulletsToRemove = [];
+  asteroidsToRemove = [];
+
   bullets.forEach((bullet) => {
+    if (
+      bullet.body.position.x < -bullet.body.width ||
+      bullet.body.position.x > this.renderer.width + bullet.body.width ||
+      bullet.body.position.y < -bullet.body.height ||
+      bullet.body.position.y > this.renderer.height + bullet.body.height
+    ) {
+      bullet.destroy();
+      console.log("DONE");
+    }
     blackHoles.forEach((hole) => {
       const holePos = hole.body.position
         .clone()
@@ -345,34 +375,6 @@ function update(this: Phaser.Scene) {
   stars.forEach((star) => {
     star.x -= star.radius * 0.2;
     if (star.x < 0) star.x += this.renderer.width;
-  });
-  bullets.forEach((bullet) => {
-    let destroy: Boolean;
-    destroy = false;
-    if (bullet instanceof UFOLaser) {
-      this.physics.collide(bullet, spaceship, () => {
-        //modify to remove lives/hearts once that feature is available
-        spaceship.setVisible(false);
-        destroy = true;
-      });
-    } else if (bullet instanceof SpaceshipLaser) {
-      this.physics.collide(bullet, ufo, () => {
-        //modify to remove lives/hearts once that feature is available
-        ufo.setVisible(false);
-        destroy = true;
-      });
-    }
-    if (destroy) {
-      bullet.destroy();
-    } else {
-      asteroids.forEach((rock) => {
-        this.physics.collide(bullet, rock, () => {
-          rock.destroy();
-          bullet.destroy();
-          return;
-        });
-      });
-    }
   });
 }
 
