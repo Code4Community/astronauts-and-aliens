@@ -5,14 +5,6 @@ import * as Phaser from "phaser";
 const screenWidth = 1000;
 const screenHeight = 600;
 
-// asteroid parameters
-const asteroidScreenMargin = 40;
-const asteroidCount = 6;
-const asteroidSpawnXMin = screenWidth / 2 - 200;
-const asteroidSpawnXMax = screenWidth / 2 + 200;
-const asteroidSpawnYMin = 0;
-const asteroidSpawnYMax = screenHeight;
-
 // spaceship parameters
 const spaceshipSpawnY = screenHeight / 2;
 const spaceshipSpawnX = screenWidth / 2 - screenWidth / 2.5;
@@ -43,6 +35,7 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const bullets: Bullet[] = [];
+let bulletsToRemove: Bullet[] = [];
 
 class Bullet extends Phaser.Physics.Arcade.Sprite {
   constructor(
@@ -55,7 +48,6 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     this.setScale(0.3);
     scene.physics.add.existing(this);
-    this.setCollideWorldBounds(true);
     bullets.push(this);
   }
 }
@@ -124,7 +116,6 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     laser.setVelocityX(200 * Math.cos((angle / 360) * 2 * Math.PI));
     laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
-
 }
 
 class Spaceship extends Vehicle {
@@ -140,7 +131,6 @@ class Spaceship extends Vehicle {
     this.setBounce(0.3);
     this.setCollideWorldBounds(true);
   }
-
 }
 
 class UFO extends Vehicle {
@@ -223,6 +213,7 @@ function preload(this: Phaser.Scene) {
 let spaceship: Spaceship;
 let ufo: UFO;
 const asteroids: Asteroid[] = [];
+let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
 
@@ -249,53 +240,59 @@ function create(this: Phaser.Scene) {
   ufo = new UFO(this, ufoSpawnX, ufoSpawnY);
 
   document.addEventListener("keydown", (event) => {
+    let cancel = true;
     if (event.key === "w") spaceship.moveUp();
-    if (event.key === "a") spaceship.moveLeft();
-    if (event.key === "s") spaceship.moveDown();
-    if (event.key === "d") spaceship.moveRight();
-    if (event.key === "q") spaceship.shoot(-parseInt(input.value), -102, 6);
+    else if (event.key === "a") spaceship.moveLeft();
+    else if (event.key === "s") spaceship.moveDown();
+    else if (event.key === "d") spaceship.moveRight();
+    else if (event.key === "q") spaceship.shoot(0, -102, 6);
+    else cancel = false;
+    if (cancel) event.preventDefault();
   });
 
   document.addEventListener("keydown", (event) => {
+    let cancel = true;
     if (event.key === "ArrowUp") ufo.moveUp();
-    if (event.key === "ArrowLeft") ufo.moveLeft();
-    if (event.key === "ArrowDown") ufo.moveDown();
-    if (event.key === "ArrowRight") ufo.moveRight();
+    else if (event.key === "ArrowLeft") ufo.moveLeft();
+    else if (event.key === "ArrowDown") ufo.moveDown();
+    else if (event.key === "ArrowRight") ufo.moveRight();
     // shoot at 180 degrees,
     // offset bullet position so it appears to emerge from sprite's gun
-    if (event.key === "p") ufo.shoot(180, 88, 27);
+    else if (event.key === "p") ufo.shoot(180, 88, 27);
+    else cancel = false;
+    if (cancel) event.preventDefault();
   });
 
   // placing the asteroids
-  const asteroidSpawnXMin= (screenWidth/2)-(screenWidth/4);
-  const asteroidSpawnXMax= (screenWidth/2)+(screenWidth/4);
+  const asteroidSpawnXMin = screenWidth / 2 - screenWidth / 4;
+  const asteroidSpawnXMax = screenWidth / 2 + screenWidth / 4;
 
-  const asteroidSpawnYMin= 50;
-  const asteroidSpawnYMax= screenHeight-50;
+  const asteroidSpawnYMin = 50;
+  const asteroidSpawnYMax = screenHeight - 50;
 
   const asteroidCount = 8;
-  const asteroidHeight=(asteroidSpawnYMax-asteroidSpawnYMin)/asteroidCount;
-  let asteroidSpawnChance=90; //percent chance to spawn asteroid
-  
+  const asteroidHeight =
+    (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
+  let asteroidSpawnChance = 90; //percent chance to spawn asteroid
+
   for (let i = 0; i < asteroidCount; i++) {
     // if an asteroid is chosen to be spawned
-    if(getRandomInt(0,99)<asteroidSpawnChance) {
-      asteroidSpawnChance-=10;
+    if (getRandomInt(0, 99) < asteroidSpawnChance) {
+      asteroidSpawnChance -= 10;
       // create asteroid and add colliders
       asteroids[i] = new Asteroid(
         this,
         getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
-        asteroidSpawnYMin+(i*asteroidHeight)
+        asteroidSpawnYMin + i * asteroidHeight
       );
-
-      this.physics.add.collider(spaceship, asteroids[i]);
-      this.physics.add.collider(ufo, asteroids[i]);
-      this.physics.add.collider(spaceship, ufo);
-    }
-    else {
-      asteroidSpawnChance+=10;
+    } else {
+      asteroidSpawnChance += 10;
     }
   }
+
+  this.physics.add.collider(spaceship, asteroids);
+  this.physics.add.collider(ufo, asteroids);
+  this.physics.add.collider(spaceship, ufo);
 
   const input = document.querySelector("#angle") as HTMLInputElement;
   const runButton = document.querySelector("#run") as HTMLButtonElement;
@@ -309,7 +306,40 @@ function create(this: Phaser.Scene) {
   // for (let i = 0; i < 10; i++) {
   //   new BlackHole(this, getRandomInt(1, 1000), getRandomInt(1, 1000));
   // }
+
+  smartCollider(this, bullets, asteroids, (bullet, astroid) => {
+    bullet.destroy();
+    astroid.destroy();
+    bulletsToRemove.push(bullet);
+    asteroidsToRemove.push(astroid);
+  });
+  smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
+    if (bullet instanceof UFOLaser) {
+      spaceship.setVisible(false);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
+    }
+  });
+  smartCollider(this, bullets, ufo, (bullet, ufo) => {
+    if (bullet instanceof SpaceshipLaser) {
+      ufo.setVisible(false);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
+    }
+  });
 }
+
+const smartCollider = <
+  A extends Phaser.Types.Physics.Arcade.GameObjectWithBody,
+  B extends Phaser.Types.Physics.Arcade.GameObjectWithBody
+>(
+  scene: Phaser.Scene,
+  a: A | A[],
+  b: B | B[],
+  callback: (a: A, b: B) => void
+) => {
+  scene.physics.add.collider(a, b, callback as ArcadePhysicsCallback);
+};
 
 function update(this: Phaser.Scene) {
   spaceship.body.velocity.x *= 0.98;
@@ -317,7 +347,22 @@ function update(this: Phaser.Scene) {
   ufo.body.velocity.x *= 0.98;
   ufo.body.velocity.y *= 0.98;
 
+  bulletsToRemove.forEach((b) => bullets.splice(bullets.indexOf(b), 1));
+  asteroidsToRemove.forEach((a) => asteroids.splice(asteroids.indexOf(a), 1));
+
+  bulletsToRemove = [];
+  asteroidsToRemove = [];
+
   bullets.forEach((bullet) => {
+    if (
+      bullet.body.position.x < -bullet.body.width ||
+      bullet.body.position.x > this.renderer.width + bullet.body.width ||
+      bullet.body.position.y < -bullet.body.height ||
+      bullet.body.position.y > this.renderer.height + bullet.body.height
+    ) {
+      bullet.destroy();
+      console.log("DONE");
+    }
     blackHoles.forEach((hole) => {
       const holePos = hole.body.position
         .clone()
@@ -331,35 +376,15 @@ function update(this: Phaser.Scene) {
     star.x -= star.radius * 0.2;
     if (star.x < 0) star.x += this.renderer.width;
   });
-  bullets.forEach((bullet) => {
-    let destroy: Boolean;
-    destroy = false;
-    if (bullet instanceof UFOLaser) {
-      this.physics.collide(bullet, spaceship, () => {
-        //modify to remove lives/hearts once that feature is available
-        spaceship.setVisible(false);
-        destroy = true;
-      });
-    } else if (bullet instanceof SpaceshipLaser) {
-      this.physics.collide(bullet, ufo, () => {
-        //modify to remove lives/hearts once that feature is available
-        ufo.setVisible(false);
-        destroy = true;
-      });
-    }
-    if (destroy) {
-      bullet.destroy();
-    } else {
-      asteroids.forEach((rock) => {
-        this.physics.collide(bullet, rock, () => {
-          rock.anims.play('destroy_asteroid');
-          rock.destroy();
-          bullet.destroy();
-          return;
-        });
-      });
-    }
-  });
+}
+
+abstract class Action {
+  abstract run(): Promise<void>;
+}
+
+async function runActions(actions: Action[]) {
+  await actions[0].run();
+  setTimeout(() => runActions(actions.slice(1)), 1000);
 }
 
 function getRandomInt(min: number, max: number): number {
