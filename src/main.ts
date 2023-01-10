@@ -15,6 +15,19 @@ const ufoSpawnY = screenHeight / 2;
 const ufoSpawnX = screenWidth / 2 + screenWidth / 2.5;
 const ufoVelocity = 140;
 
+// asteroid spawn parameters
+const asteroidSpawnXMin = screenWidth / 2 - screenWidth / 4;
+const asteroidSpawnXMax = screenWidth / 2 + screenWidth / 4;
+
+const asteroidSpawnYMin = 50;
+const asteroidSpawnYMax = screenHeight - 50;
+
+const asteroidCount = 8;
+const asteroidHeight =
+  (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
+let asteroidSpawnChance = 90; //percent chance to spawn asteroid
+
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
@@ -34,9 +47,11 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 };
 
+// array of bullets, each fired bullet is appended here
 const bullets: Bullet[] = [];
 let bulletsToRemove: Bullet[] = [];
 
+// parent for fired bullet
 class Bullet extends Phaser.Physics.Arcade.Sprite {
   constructor(
     scene: Phaser.Scene,
@@ -51,18 +66,22 @@ class Bullet extends Phaser.Physics.Arcade.Sprite {
     bullets.push(this);
   }
 }
+
+// child ufo laser class
 class UFOLaser extends Bullet {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, image("lazerUFO"));
   }
 }
 
+// child spaceship laser class
 class SpaceshipLaser extends Bullet {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, image("lazerSpaceship"));
   }
 }
 
+// parent class for ufo/spaceship
 class Vehicle extends Phaser.Physics.Arcade.Sprite {
   alive: boolean = true;
   velo: number;
@@ -118,6 +137,8 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+
+// child class for spaceship vehicle
 class Spaceship extends Vehicle {
   alive: boolean = true;
 
@@ -133,6 +154,7 @@ class Spaceship extends Vehicle {
   }
 }
 
+// child class for UFO vehicle
 class UFO extends Vehicle {
   alive: boolean = true;
 
@@ -148,6 +170,8 @@ class UFO extends Vehicle {
   }
 }
 
+
+// class for asteroids
 class Asteroid extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     // When we determine the file name of the sprite for spaceship we need
@@ -162,8 +186,12 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+
+//array for black holes
 const blackHoles: BlackHole[] = [];
 
+// black hole class
+// experimental feature
 class BlackHole extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, image("blackhole"));
@@ -176,6 +204,7 @@ class BlackHole extends Phaser.Physics.Arcade.Sprite {
 // Define the game
 var game = new Phaser.Game(config);
 
+// asset locations
 const images = {
   spaceship: "assets/Space Ship 3 Hearts.png",
   ufo: "assets/UFO 3 Hearts.png",
@@ -195,19 +224,7 @@ function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
   }
-  this.load.glsl("fireball", "assets/shader0.frag");
-  //   this.load.spritesheet("humanobstacle", "assets/humanObstacles.png", {
-  //     frameWidth: 64,
-  //     frameHeight: 64,
-  //   });
-  //   this.load.spritesheet("astronautidle", "assets/astroidle2.png", {
-  //     frameWidth: 64,
-  //     frameHeight: 64,
-  //   });
-  //   this.load.spritesheet("alienidle", "assets/alienidle.png", {
-  //     frameWidth: 64,
-  //     frameHeight: 64,
-  //   });
+
 }
 
 let spaceship: Spaceship;
@@ -227,14 +244,6 @@ function create(this: Phaser.Scene) {
         0xffffff
       )
     );
-
-  // this.add.shader(
-  //   "fireball",
-  //   this.renderer.width / 2,
-  //   this.renderer.height / 2,
-  //   this.renderer.width,
-  //   this.renderer.height
-  // );
 
   spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY);
   ufo = new UFO(this, ufoSpawnX, ufoSpawnY);
@@ -263,18 +272,6 @@ function create(this: Phaser.Scene) {
     if (cancel) event.preventDefault();
   });
 
-  // placing the asteroids
-  const asteroidSpawnXMin = screenWidth / 2 - screenWidth / 4;
-  const asteroidSpawnXMax = screenWidth / 2 + screenWidth / 4;
-
-  const asteroidSpawnYMin = 50;
-  const asteroidSpawnYMax = screenHeight - 50;
-
-  const asteroidCount = 8;
-  const asteroidHeight =
-    (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
-  let asteroidSpawnChance = 90; //percent chance to spawn asteroid
-
   for (let i = 0; i < asteroidCount; i++) {
     // if an asteroid is chosen to be spawned
     if (getRandomInt(0, 99) < asteroidSpawnChance) {
@@ -302,10 +299,6 @@ function create(this: Phaser.Scene) {
     // offset bullet position so it appears to emerge from sprite's gun
     spaceship.shoot(-parseInt(input.value), -102, 6);
   });
-
-  // for (let i = 0; i < 10; i++) {
-  //   new BlackHole(this, getRandomInt(1, 1000), getRandomInt(1, 1000));
-  // }
 
   smartCollider(this, bullets, asteroids, (bullet, astroid) => {
     bullet.destroy();
