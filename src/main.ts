@@ -15,12 +15,12 @@ const asteroidSpawnYMax = screenHeight;
 
 // spaceship parameters
 const spaceshipSpawnY = screenHeight / 2;
-const spaceshipSpawnX = (screenWidth / 2)-(screenWidth/2.5);
+const spaceshipSpawnX = screenWidth / 2 - screenWidth / 2.5;
 const spaceshipVelocity = 140;
 
 //ufo parameters
 const ufoSpawnY = screenHeight / 2;
-const ufoSpawnX = (screenWidth / 2)+(screenWidth/2.5)
+const ufoSpawnX = screenWidth / 2 + screenWidth / 2.5;
 const ufoVelocity = 140;
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -45,7 +45,12 @@ const config: Phaser.Types.Core.GameConfig = {
 const bullets: Bullet[] = [];
 
 class Bullet extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene: Phaser.Scene, x: number, y: number, picture: keyof typeof images) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    picture: keyof typeof images
+  ) {
     super(scene, x, y, image(picture));
     scene.add.existing(this);
     this.setScale(0.3);
@@ -71,7 +76,14 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
   velo: number;
   bulletType: typeof Bullet;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, picture: keyof typeof images, velo: number, bulletType: typeof Bullet = Bullet) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    picture: keyof typeof images,
+    velo: number,
+    bulletType: typeof Bullet = Bullet
+  ) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
     super(scene, x, y, image(picture));
@@ -100,10 +112,15 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.body.velocity.x = this.velo;
   }
 
-  shoot(angle: number, xOffset=0, yOffset=0) {
+  shoot(angle: number, xOffset = 0, yOffset = 0) {
     // 'bullet' argument is only there bc Bullet constructor has 4 parameters. SpaceshipLaser and UFOLaser each have 3 parameters.
     // However, this.bulletType should never be Bullet, it should always be SpaceshipLaser or UFOLaser.
-    const laser = new this.bulletType (this.scene, this.x-xOffset, this.y-yOffset, 'bullet');
+    const laser = new this.bulletType(
+      this.scene,
+      this.x - xOffset,
+      this.y - yOffset,
+      "bullet"
+    );
     laser.setVelocityX(200 * Math.cos((angle / 360) * 2 * Math.PI));
     laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
@@ -176,7 +193,7 @@ const images = {
   bullet: "assets/bullet.png",
   blackhole: "assets/blackhole.png",
   lazerSpaceship: "assets/LAZER SPACE SHIP.png",
-  lazerUFO: "assets/LAZER UFO.png"
+  lazerUFO: "assets/LAZER UFO.png",
 } as const;
 
 // compile time image name checking
@@ -188,10 +205,7 @@ function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
   }
-  this.load.spritesheet('Asteroid Break', 
-        'assets/ASTEROID BREAK.png',
-        { frameWidth: 32, frameHeight: 32 }
-    );
+  this.load.glsl("fireball", "assets/shader0.frag");
   //   this.load.spritesheet("humanobstacle", "assets/humanObstacles.png", {
   //     frameWidth: 64,
   //     frameHeight: 64,
@@ -210,23 +224,26 @@ let spaceship: Spaceship;
 let ufo: UFO;
 const asteroids: Asteroid[] = [];
 
+const stars: Phaser.GameObjects.Arc[] = [];
+
 function create(this: Phaser.Scene) {
-
-  this.anims.create({
-    key: 'destroy_asteroid',
-    frames: this.anims.generateFrameNumbers('ASTEROID BREAK', { start: 0, end: 16 }),
-    frameRate: 16,
-    repeat: -1
-  });
-
-
   for (let i = 0; i < 100; i++)
-    this.add.circle(
-      getRandomInt(0, this.renderer.width),
-      getRandomInt(0, this.renderer.height),
-      getRandomDouble(0.5, 3),
-      0xffffff
+    stars.push(
+      this.add.circle(
+        getRandomInt(0, this.renderer.width),
+        getRandomInt(0, this.renderer.height),
+        getRandomDouble(0.5, 3),
+        0xffffff
+      )
     );
+
+  // this.add.shader(
+  //   "fireball",
+  //   this.renderer.width / 2,
+  //   this.renderer.height / 2,
+  //   this.renderer.width,
+  //   this.renderer.height
+  // );
 
   spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY);
   ufo = new UFO(this, ufoSpawnX, ufoSpawnY);
@@ -244,29 +261,47 @@ function create(this: Phaser.Scene) {
     if (event.key === "ArrowLeft") ufo.moveLeft();
     if (event.key === "ArrowDown") ufo.moveDown();
     if (event.key === "ArrowRight") ufo.moveRight();
-    // shoot at 180 degrees, 
+    // shoot at 180 degrees,
     // offset bullet position so it appears to emerge from sprite's gun
     if (event.key === "p") ufo.shoot(180, 88, 27);
   });
 
   // placing the asteroids
-  for (let i = 0; i < asteroidCount; i++) {
-    asteroids[i] = new Asteroid(
-      this,
-      getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
-      getRandomInt(asteroidSpawnYMin, asteroidSpawnYMax)
-    );
+  const asteroidSpawnXMin= (screenWidth/2)-(screenWidth/4);
+  const asteroidSpawnXMax= (screenWidth/2)+(screenWidth/4);
 
-    this.physics.add.collider(spaceship, asteroids[i]);
-    this.physics.add.collider(ufo, asteroids[i]);
-    this.physics.add.collider(spaceship, ufo);
+  const asteroidSpawnYMin= 50;
+  const asteroidSpawnYMax= screenHeight-50;
+
+  const asteroidCount = 8;
+  const asteroidHeight=(asteroidSpawnYMax-asteroidSpawnYMin)/asteroidCount;
+  let asteroidSpawnChance=90; //percent chance to spawn asteroid
+  
+  for (let i = 0; i < asteroidCount; i++) {
+    // if an asteroid is chosen to be spawned
+    if(getRandomInt(0,99)<asteroidSpawnChance) {
+      asteroidSpawnChance-=10;
+      // create asteroid and add colliders
+      asteroids[i] = new Asteroid(
+        this,
+        getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
+        asteroidSpawnYMin+(i*asteroidHeight)
+      );
+
+      this.physics.add.collider(spaceship, asteroids[i]);
+      this.physics.add.collider(ufo, asteroids[i]);
+      this.physics.add.collider(spaceship, ufo);
+    }
+    else {
+      asteroidSpawnChance+=10;
+    }
   }
 
   const input = document.querySelector("#angle") as HTMLInputElement;
   const runButton = document.querySelector("#run") as HTMLButtonElement;
 
   runButton.addEventListener("click", () => {
-    // shoot at 180 degrees, 
+    // shoot at 180 degrees,
     // offset bullet position so it appears to emerge from sprite's gun
     spaceship.shoot(-parseInt(input.value), -102, 6);
   });
@@ -292,37 +327,39 @@ function update(this: Phaser.Scene) {
     });
   });
 
-  bullets.forEach((bullet)=> {
+  stars.forEach((star) => {
+    star.x -= star.radius * 0.2;
+    if (star.x < 0) star.x += this.renderer.width;
+  });
+  bullets.forEach((bullet) => {
     let destroy: Boolean;
     destroy = false;
-    if(bullet instanceof UFOLaser){
-      this.physics.collide(bullet,spaceship,()=>{
+    if (bullet instanceof UFOLaser) {
+      this.physics.collide(bullet, spaceship, () => {
         //modify to remove lives/hearts once that feature is available
         spaceship.setVisible(false);
         destroy = true;
       });
-    } else if(bullet instanceof SpaceshipLaser){
-      this.physics.collide(bullet,ufo,()=>{
+    } else if (bullet instanceof SpaceshipLaser) {
+      this.physics.collide(bullet, ufo, () => {
         //modify to remove lives/hearts once that feature is available
         ufo.setVisible(false);
         destroy = true;
       });
     }
-    if(destroy){
+    if (destroy) {
       bullet.destroy();
     } else {
-      asteroids.forEach((rock)=> {
-        this.physics.collide(bullet,rock,()=> {
+      asteroids.forEach((rock) => {
+        this.physics.collide(bullet, rock, () => {
           rock.anims.play('destroy_asteroid');
           rock.destroy();
           bullet.destroy();
           return;
-        })
-      })
+        });
+      });
     }
-
   });
-
 }
 
 function getRandomInt(min: number, max: number): number {
