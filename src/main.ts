@@ -86,6 +86,7 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
   alive: boolean = true;
   velo: number;
   bulletType: typeof Bullet;
+  health: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -101,10 +102,12 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(0.8, 0.8);
-    this.setBounce(0.3);
+    this.setBounce(0);
+    this.setBounceX(0);
     this.setCollideWorldBounds(true);
     this.velo = velo;
     this.bulletType = bulletType;
+    this.health = 3;
   }
 
   moveUp() {
@@ -320,16 +323,22 @@ function create(this: Phaser.Scene) {
     bulletsToRemove.push(bullet);
     asteroidsToRemove.push(astroid);
   });
-  smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
+  smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
-      spaceship.setVisible(false);
+      spaceship.health--;
+      if(spaceship.health == 0){
+        spaceship.setVisible(false);
+      }
       bullet.destroy();
       bulletsToRemove.push(bullet);
     }
   });
-  smartCollider(this, bullets, ufo, (bullet, ufo) => {
+  smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
-      ufo.setVisible(false);
+      ufo.health--;
+      if(ufo.health == 0){
+        ufo.setVisible(false);
+      }
       bullet.destroy();
       bulletsToRemove.push(bullet);
     }
@@ -348,6 +357,18 @@ const smartCollider = <
   scene.physics.add.collider(a, b, callback as ArcadePhysicsCallback);
 };
 
+const smartOverlap = <
+  A extends Phaser.Types.Physics.Arcade.GameObjectWithBody,
+  B extends Phaser.Types.Physics.Arcade.GameObjectWithBody
+>(
+  scene: Phaser.Scene,
+  a: A | A[],
+  b: B | B[],
+  callback: (a: A, b: B) => void
+) => {
+  scene.physics.add.overlap(a, b, callback as ArcadePhysicsCallback);
+};
+
 function update(this: Phaser.Scene) {
   spaceship.body.velocity.x *= 0.98;
   spaceship.body.velocity.y *= 0.98;
@@ -360,6 +381,8 @@ function update(this: Phaser.Scene) {
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
+
+  
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
