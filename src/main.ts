@@ -8,12 +8,12 @@ const screenHeight = 600;
 // spaceship parameters
 const spaceshipSpawnY = screenHeight / 2;
 const spaceshipSpawnX = screenWidth / 2 - screenWidth / 2.5;
-const spaceshipVelocity = 140;
+const spaceshipVelocity = 1400;
 
 //ufo parameters
 const ufoSpawnY = screenHeight / 2;
 const ufoSpawnX = screenWidth / 2 + screenWidth / 2.5;
-const ufoVelocity = 140;
+const ufoVelocity = 1400;
 
 // asteroid spawn parameters
 const asteroidSpawnXMin = screenWidth / 2 - screenWidth / 4;
@@ -321,6 +321,8 @@ function create(this: Phaser.Scene) {
   smartCollider(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.setVisible(false);
+			var manCamera = this.cameras.main
+			manCamera.shake(250)
       safeRemove(bullet, bulletsToRemove);
     }
   });
@@ -344,10 +346,12 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
 };
 
 function update(this: Phaser.Scene) {
-  spaceship.body.velocity.x *= 0.98;
-  spaceship.body.velocity.y *= 0.98;
-  ufo.body.velocity.x *= 0.98;
-  ufo.body.velocity.y *= 0.98;
+	var decelerationFactor = 0.6;
+
+  spaceship.body.velocity.x *= decelerationFactor;
+  spaceship.body.velocity.y *= decelerationFactor;
+  ufo.body.velocity.x *= decelerationFactor;
+  ufo.body.velocity.y *= decelerationFactor;
 
   bulletsToRemove.forEach((b) => bullets.splice(bullets.indexOf(b), 1));
   asteroidsToRemove.forEach((a) => asteroids.splice(asteroids.indexOf(a), 1));
