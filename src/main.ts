@@ -123,6 +123,11 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.body.velocity.x = this.velo;
   }
 
+  moveAngle(angle: number) { 
+    this.body.velocity.x = this.velo*Math.cos(angle*Math.PI/180);
+    this.body.velocity.y = this.velo*Math.sin(angle*Math.PI/180);
+  }
+
   shoot(angle: number, xOffset = 0, yOffset = 0) {
     // 'bullet' argument is only there bc Bullet constructor has 4 parameters. SpaceshipLaser and UFOLaser each have 3 parameters.
     // However, this.bulletType should never be Bullet, it should always be SpaceshipLaser or UFOLaser.
@@ -298,6 +303,15 @@ function create(this: Phaser.Scene) {
     // shoot at 180 degrees,
     // offset bullet position so it appears to emerge from sprite's gun
     spaceship.shoot(-parseInt(input.value), -102, 6);
+  });
+
+  const moveInput = document.querySelector("#angleMove") as HTMLInputElement;
+  const moveButton = document.querySelector("#move") as HTMLButtonElement;
+
+  moveButton.addEventListener("click", () => {
+    // move at x degrees,
+    // offset bullet position so it appears to emerge from sprite's gun
+    spaceship.moveAngle(-parseInt(moveInput.value));
   });
 
   smartCollider(this, bullets, asteroids, (bullet, astroid) => {
