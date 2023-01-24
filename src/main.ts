@@ -23,8 +23,10 @@ const asteroidSpawnYMin = 50;
 const asteroidSpawnYMax = screenHeight - 50;
 
 const asteroidCount = 8;
-const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
+const asteroidHeight =
+  (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
 let asteroidSpawnChance = 90; //percent chance to spawn asteroid
+
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -84,6 +86,7 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
   alive: boolean = true;
   velo: number;
   bulletType: typeof Bullet;
+  health: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -99,10 +102,12 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(0.8, 0.8);
-    this.setBounce(0.3);
+    this.setBounce(0);
+    this.setBounceX(0);
     this.setCollideWorldBounds(true);
     this.velo = velo;
     this.bulletType = bulletType;
+    this.health = 3;
   }
 
   moveUp() {
@@ -140,6 +145,7 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+
 // child class for spaceship vehicle
 class Spaceship extends Vehicle {
   alive: boolean = true;
@@ -172,6 +178,7 @@ class UFO extends Vehicle {
   }
 }
 
+
 // class for asteroids
 class Asteroid extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -186,6 +193,7 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
     this.setImmovable(true);
   }
 }
+
 
 //array for black holes
 const blackHoles: BlackHole[] = [];
@@ -224,6 +232,7 @@ function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
   }
+
 }
 
 let spaceship: Spaceship;
@@ -309,21 +318,31 @@ function create(this: Phaser.Scene) {
   });
 
   smartCollider(this, bullets, asteroids, (bullet, astroid) => {
-    safeRemove(bullet, bulletsToRemove);
-    safeRemove(astroid, asteroidsToRemove);
+    bullet.destroy();
+    astroid.destroy();
+    bulletsToRemove.push(bullet);
+    asteroidsToRemove.push(astroid);
   });
-  smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
+  smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
-      spaceship.setVisible(false);
-      safeRemove(bullet, bulletsToRemove);
+      spaceship.health--;
+      if(spaceship.health == 0){
+        spaceship.setVisible(false);
+      }
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
     }
   });
-  smartCollider(this, bullets, ufo, (bullet, ufo) => {
+  smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
-      ufo.setVisible(false);
+      ufo.health--;
+      if(ufo.health == 0){
+        ufo.setVisible(false);
 			var manCamera = this.cameras.main
 			manCamera.shake(250)
-      safeRemove(bullet, bulletsToRemove);
+      }
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
     }
   });
 }
@@ -340,9 +359,16 @@ const smartCollider = <
   scene.physics.add.collider(a, b, callback as ArcadePhysicsCallback);
 };
 
-const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
-  t.destroy();
-  toRemove.push(t);
+const smartOverlap = <
+  A extends Phaser.Types.Physics.Arcade.GameObjectWithBody,
+  B extends Phaser.Types.Physics.Arcade.GameObjectWithBody
+>(
+  scene: Phaser.Scene,
+  a: A | A[],
+  b: B | B[],
+  callback: (a: A, b: B) => void
+) => {
+  scene.physics.add.overlap(a, b, callback as ArcadePhysicsCallback);
 };
 
 function update(this: Phaser.Scene) {
@@ -359,6 +385,8 @@ function update(this: Phaser.Scene) {
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
+
+  
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
@@ -366,7 +394,8 @@ function update(this: Phaser.Scene) {
       bullet.body.position.y < -bullet.body.height ||
       bullet.body.position.y > this.renderer.height + bullet.body.height
     ) {
-      safeRemove(bullet, bulletsToRemove);
+      bullet.destroy();
+      console.log("DONE");
     }
     blackHoles.forEach((hole) => {
       const holePos = hole.body.position
