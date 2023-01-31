@@ -240,6 +240,8 @@ let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
 
+const code = document.querySelector("#code") as HTMLTextAreaElement;
+
 function create(this: Phaser.Scene) {
   for (let i = 0; i < 100; i++)
     stars.push(
@@ -255,24 +257,17 @@ function create(this: Phaser.Scene) {
   ufo = new UFO(this, ufoSpawnX, ufoSpawnY);
 
   document.addEventListener("keydown", (event) => {
+    if (document.activeElement == code) return;
     let cancel = true;
     if (event.key === "w") spaceship.moveUp();
     else if (event.key === "a") spaceship.moveLeft();
     else if (event.key === "s") spaceship.moveDown();
     else if (event.key === "d") spaceship.moveRight();
     else if (event.key === "q") spaceship.shoot(0, -102, 6);
-    else cancel = false;
-    if (cancel) event.preventDefault();
-  });
-
-  document.addEventListener("keydown", (event) => {
-    let cancel = true;
-    if (event.key === "ArrowUp") ufo.moveUp();
+    else if (event.key === "ArrowUp") ufo.moveUp();
     else if (event.key === "ArrowLeft") ufo.moveLeft();
     else if (event.key === "ArrowDown") ufo.moveDown();
     else if (event.key === "ArrowRight") ufo.moveRight();
-    // shoot at 180 degrees,
-    // offset bullet position so it appears to emerge from sprite's gun
     else if (event.key === "p") ufo.shoot(180, 88, 27);
     else cancel = false;
     if (cancel) event.preventDefault();
@@ -297,24 +292,6 @@ function create(this: Phaser.Scene) {
   this.physics.add.collider(ufo, asteroids);
   this.physics.add.collider(spaceship, ufo);
 
-  const input = document.querySelector("#angle") as HTMLInputElement;
-  const runButton = document.querySelector("#run") as HTMLButtonElement;
-
-  runButton.addEventListener("click", () => {
-    // shoot at 180 degrees,
-    // offset bullet position so it appears to emerge from sprite's gun
-    spaceship.shoot(-parseInt(input.value), -102, 6);
-  });
-
-  const moveInput = document.querySelector("#angleMove") as HTMLInputElement;
-  const moveButton = document.querySelector("#move") as HTMLButtonElement;
-
-  moveButton.addEventListener("click", () => {
-    // move at x degrees,
-    // offset bullet position so it appears to emerge from sprite's gun
-    spaceship.moveAngle(-parseInt(moveInput.value));
-  });
-
   smartCollider(this, bullets, asteroids, (bullet, astroid) => {
     safeRemove(bullet, bulletsToRemove);
     safeRemove(astroid, asteroidsToRemove);
@@ -338,6 +315,101 @@ function create(this: Phaser.Scene) {
       }
       safeRemove(bullet, bulletsToRemove);
     }
+  });
+
+  const allActions = {
+    up(v: Vehicle) {
+      v.moveUp();
+    },
+    down(v: Vehicle) {
+      v.moveDown();
+    },
+    left(v: Vehicle) {
+      v.moveLeft();
+    },
+    right(v: Vehicle) {
+      v.moveRight();
+    },
+    shoot(v: Vehicle) {
+      v.shoot(getRandomInt(0, 360));
+    },
+  } satisfies Record<string, (v: Vehicle) => void>;
+
+  // the list of actions as a static union
+  type Action = keyof typeof allActions;
+
+  const runButton = document.querySelector("#run") as HTMLButtonElement;
+  runButton.addEventListener("click", () => {
+    const lines = code.value.split("\n") as Action[];
+
+    console.log(lines);
+
+    const parseLines = (lines: string[]): Action[] => {
+      let result: Action[] = [];
+      let inRepeat = false;
+      let numRepeatTimes: number = 0;
+      let repeatLines = [] as Action[];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.substring(0, 3) == "do ") {
+          inRepeat = true;
+          numRepeatTimes = parseInt(line.split(" ")[1]);
+          repeatLines = [];
+        } else if (line.substring(0, 3) == "end") {
+          inRepeat = false;
+          const subActions = parseLines(repeatLines);
+          result = [
+            ...result,
+            ...Array(numRepeatTimes)
+              .fill(0)
+              .flatMap(() => subActions),
+          ];
+        } else if (inRepeat) {
+          repeatLines.push(line as Action);
+        } else {
+          result = [...result, line as Action];
+        }
+        console.log(result);
+      }
+      return result;
+    };
+
+    // const actions = [...lines];
+
+    const recursiveRunActions = (actions: Action[]) => {
+      if (actions.length == 0) return;
+      allActions[actions[0]](spaceship);
+      setTimeout(() => recursiveRunActions(actions.slice(1)), 100);
+    };
+
+    recursiveRunActions(parseLines(lines));
+  });
+
+  const randomButton = document.querySelector("#random") as HTMLButtonElement;
+  randomButton.addEventListener("click", () => {
+    // just for testing. set default depth to >0 when nested loops are working
+    const randomProgram = (depth: number = 1): string[] => {
+      let actions: string[] = [];
+      for (let i = 0; i < getRandomInt(5, 200); i++) {
+        if (Math.random() < 0.1 && depth > 0) {
+          actions = [
+            ...actions,
+            `do ${getRandomInt(1, 5)} times`,
+            ...randomProgram(depth - 1).map((it) => "    " + it),
+            `end`,
+          ];
+        } else {
+          actions.push(
+            Object.keys(allActions)[
+              getRandomInt(0, Object.keys(allActions).length)
+            ]
+          );
+        }
+      }
+      return actions;
+    };
+
+    code.value = randomProgram().join("\n");
   });
 }
 
