@@ -26,6 +26,7 @@ const asteroidCount = 8;
 const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
 let asteroidSpawnChance = 90; //percent chance to spawn asteroid
 
+let GameOver: boolean = false;
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -328,7 +329,7 @@ function create(this: Phaser.Scene) {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
       if (spaceship.health == 0) {
-        spaceship.setVisible(false);
+        spaceship.disableBody(true, true);
       }
       safeRemove(bullet, bulletsToRemove);
       bullet.destroy();
@@ -339,7 +340,7 @@ function create(this: Phaser.Scene) {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
       if (ufo.health == 0) {
-        ufo.setVisible(false);
+        ufo.disableBody(true, true);
         var manCamera = this.cameras.main
         manCamera.shake(250)
       }
@@ -393,7 +394,9 @@ function update(this: Phaser.Scene) {
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
-
+  if (GameOver == true) {
+    game.destroy(true);
+  }
   
   bullets.forEach((bullet) => {
     if (
