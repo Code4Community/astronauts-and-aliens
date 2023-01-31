@@ -26,6 +26,7 @@ const asteroidCount = 8;
 const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
 let asteroidSpawnChance = 90; //percent chance to spawn asteroid
 
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
@@ -124,9 +125,9 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.body.velocity.x = this.velo;
   }
 
-  moveAngle(angle: number) {
-    this.body.velocity.x = this.velo * Math.cos((angle * Math.PI) / 180);
-    this.body.velocity.y = this.velo * Math.sin((angle * Math.PI) / 180);
+  moveAngle(angle: number) { 
+    this.body.velocity.x = this.velo*Math.cos(angle*Math.PI/180);
+    this.body.velocity.y = this.velo*Math.sin(angle*Math.PI/180);
   }
 
   shoot(angle: number, xOffset = 0, yOffset = 0) {
@@ -142,6 +143,7 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
 }
+
 
 // child class for spaceship vehicle
 class Spaceship extends Vehicle {
@@ -175,6 +177,7 @@ class UFO extends Vehicle {
   }
 }
 
+
 // class for asteroids
 class Asteroid extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -189,6 +192,7 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
     this.setImmovable(true);
   }
 }
+
 
 //array for black holes
 const blackHoles: BlackHole[] = [];
@@ -231,6 +235,7 @@ function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
   }
+
 }
 
 let spaceship: Spaceship;
@@ -322,41 +327,25 @@ function create(this: Phaser.Scene) {
   smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
-<<<<<<< HEAD
-      if(spaceship.health == 2){
-
-      }
-      if(spaceship.health == 1){
-        
-      }
-      if(spaceship.health == 0){
-=======
       if (spaceship.health == 0) {
->>>>>>> 18d6d1aa65190af30854f6feab56d30b12b9e036
         spaceship.setVisible(false);
       }
       safeRemove(bullet, bulletsToRemove);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
     }
   });
   smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
-<<<<<<< HEAD
-      if(ufo.health == 2){
-        
-      }
-      if(ufo.health == 1){
-        
-      }
-      if(ufo.health == 0){
-=======
       if (ufo.health == 0) {
->>>>>>> 18d6d1aa65190af30854f6feab56d30b12b9e036
         ufo.setVisible(false);
-        var manCamera = this.cameras.main;
-        manCamera.shake(250);
+        var manCamera = this.cameras.main
+        manCamera.shake(250)
       }
       safeRemove(bullet, bulletsToRemove);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
     }
   });
 }
@@ -404,6 +393,8 @@ function update(this: Phaser.Scene) {
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
+
+  
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
