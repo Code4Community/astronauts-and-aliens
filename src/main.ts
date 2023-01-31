@@ -23,10 +23,8 @@ const asteroidSpawnYMin = 50;
 const asteroidSpawnYMax = screenHeight - 50;
 
 const asteroidCount = 8;
-const asteroidHeight =
-  (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
+const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
 let asteroidSpawnChance = 90; //percent chance to spawn asteroid
-
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -126,9 +124,9 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.body.velocity.x = this.velo;
   }
 
-  moveAngle(angle: number) { 
-    this.body.velocity.x = this.velo*Math.cos(angle*Math.PI/180);
-    this.body.velocity.y = this.velo*Math.sin(angle*Math.PI/180);
+  moveAngle(angle: number) {
+    this.body.velocity.x = this.velo * Math.cos((angle * Math.PI) / 180);
+    this.body.velocity.y = this.velo * Math.sin((angle * Math.PI) / 180);
   }
 
   shoot(angle: number, xOffset = 0, yOffset = 0) {
@@ -144,7 +142,6 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
 }
-
 
 // child class for spaceship vehicle
 class Spaceship extends Vehicle {
@@ -178,7 +175,6 @@ class UFO extends Vehicle {
   }
 }
 
-
 // class for asteroids
 class Asteroid extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -193,7 +189,6 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
     this.setImmovable(true);
   }
 }
-
 
 //array for black holes
 const blackHoles: BlackHole[] = [];
@@ -236,7 +231,6 @@ function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
   }
-
 }
 
 let spaceship: Spaceship;
@@ -322,14 +316,13 @@ function create(this: Phaser.Scene) {
   });
 
   smartCollider(this, bullets, asteroids, (bullet, astroid) => {
-    bullet.destroy();
-    astroid.destroy();
-    bulletsToRemove.push(bullet);
-    asteroidsToRemove.push(astroid);
+    safeRemove(bullet, bulletsToRemove);
+    safeRemove(astroid, asteroidsToRemove);
   });
   smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
+<<<<<<< HEAD
       if(spaceship.health == 2){
 
       }
@@ -337,15 +330,18 @@ function create(this: Phaser.Scene) {
         
       }
       if(spaceship.health == 0){
+=======
+      if (spaceship.health == 0) {
+>>>>>>> 18d6d1aa65190af30854f6feab56d30b12b9e036
         spaceship.setVisible(false);
       }
-      bullet.destroy();
-      bulletsToRemove.push(bullet);
+      safeRemove(bullet, bulletsToRemove);
     }
   });
   smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
+<<<<<<< HEAD
       if(ufo.health == 2){
         
       }
@@ -353,12 +349,14 @@ function create(this: Phaser.Scene) {
         
       }
       if(ufo.health == 0){
+=======
+      if (ufo.health == 0) {
+>>>>>>> 18d6d1aa65190af30854f6feab56d30b12b9e036
         ufo.setVisible(false);
-			var manCamera = this.cameras.main
-			manCamera.shake(250)
+        var manCamera = this.cameras.main;
+        manCamera.shake(250);
       }
-      bullet.destroy();
-      bulletsToRemove.push(bullet);
+      safeRemove(bullet, bulletsToRemove);
     }
   });
 }
@@ -387,8 +385,13 @@ const smartOverlap = <
   scene.physics.add.overlap(a, b, callback as ArcadePhysicsCallback);
 };
 
+const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
+  t.destroy();
+  toRemove.push(t);
+};
+
 function update(this: Phaser.Scene) {
-	var decelerationFactor = 0.6;
+  var decelerationFactor = 0.6;
 
   spaceship.body.velocity.x *= decelerationFactor;
   spaceship.body.velocity.y *= decelerationFactor;
@@ -401,8 +404,6 @@ function update(this: Phaser.Scene) {
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
-
-  
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
@@ -410,8 +411,7 @@ function update(this: Phaser.Scene) {
       bullet.body.position.y < -bullet.body.height ||
       bullet.body.position.y > this.renderer.height + bullet.body.height
     ) {
-      bullet.destroy();
-      console.log("DONE");
+      safeRemove(bullet, bulletsToRemove);
     }
     blackHoles.forEach((hole) => {
       const holePos = hole.body.position
