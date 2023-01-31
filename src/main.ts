@@ -330,6 +330,12 @@ function create(this: Phaser.Scene) {
   smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
+      if(spaceship.health == 2){
+
+      }
+      if(spaceship.health == 1){
+        
+      }
       if(spaceship.health == 0){
         spaceship.setVisible(false);
       }
@@ -340,6 +346,12 @@ function create(this: Phaser.Scene) {
   smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
+      if(ufo.health == 2){
+        
+      }
+      if(ufo.health == 1){
+        
+      }
       if(ufo.health == 0){
         ufo.setVisible(false);
 			var manCamera = this.cameras.main
