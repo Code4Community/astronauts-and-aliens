@@ -330,6 +330,7 @@ function create(this: Phaser.Scene) {
       spaceship.health--;
       if (spaceship.health == 0) {
         spaceship.disableBody(true, true);
+        GameOver = true;
       }
       safeRemove(bullet, bulletsToRemove);
       bullet.destroy();
