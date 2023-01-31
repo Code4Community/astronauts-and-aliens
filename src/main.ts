@@ -210,7 +210,11 @@ var game = new Phaser.Game(config);
 // asset locations
 const images = {
   spaceship: "assets/Space Ship 3 Hearts.png",
+  spaceship2hearts: "assets/Space Ship 2 Hearts.png",
+  spaceship1hearts: "assets/Space Shop 1 Hearts.png",
   ufo: "assets/UFO 3 Hearts.png",
+  ufo2hearts: "assets/UFO 2 Hearts.png",
+  ufo3hearts: "assets/UFO 2 Hearts.png",
   asteroid: "assets/Small Asteroid.png",
   bullet: "assets/bullet.png",
   blackhole: "assets/blackhole.png",
