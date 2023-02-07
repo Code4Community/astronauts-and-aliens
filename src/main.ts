@@ -275,6 +275,7 @@ function create(this: Phaser.Scene) {
     else if (event.key === "ArrowDown") ufo.moveDown();
     else if (event.key === "ArrowRight") ufo.moveRight();
     else if (event.key === "p") ufo.shoot(180, 88, 27);
+    else if (event.key === "k") ufoTurn();
     else cancel = false;
     if (cancel) event.preventDefault();
   });
@@ -512,4 +513,21 @@ function getRandomInt(min: number, max: number): number {
 
 function getRandomDouble(min: number, max: number): number {
   return Math.random() * (max - min) + min;
+}
+
+function ufoTurn() {
+  for(let i = 0; i < 5; i++) {
+    let action = getRandomInt(0, 4);
+    if(action==0) {
+      ufo.moveUp();
+    } else if(action==1) {
+      ufo.moveDown();
+    } else if(action==2) {
+      ufo.moveLeft();
+    } else if(action==3) {
+      ufo.moveRight();
+    } else if(action==4) {
+      ufo.shoot(180, 88, 27);
+    }
+  }
 }
