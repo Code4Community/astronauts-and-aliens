@@ -517,7 +517,7 @@ function getRandomDouble(min: number, max: number): number {
 
 function ufoTurn() {
   for(let i = 0; i < 5; i++) {
-    let action = getRandomInt(0, 4);
+    let action = getRandomInt(0, 5);
     if(action==0) {
       ufo.moveUp();
     } else if(action==1) {
