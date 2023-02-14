@@ -2,8 +2,8 @@ import "./style.css";
 import * as Phaser from "phaser";
 
 // screen size and camera
-const screenWidth = 1000;
-const screenHeight = 600;
+const screenWidth = screen.width * .75;
+const screenHeight = screen.height * .70;
 
 // spaceship parameters
 const spaceshipSpawnY = screenHeight / 2;
@@ -126,9 +126,9 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.body.velocity.x = this.velo;
   }
 
-  moveAngle(angle: number) {
-    this.body.velocity.x = this.velo * Math.cos((angle * Math.PI) / 180);
-    this.body.velocity.y = this.velo * Math.sin((angle * Math.PI) / 180);
+  moveAngle(angle: number) { 
+    this.body.velocity.x = this.velo*Math.cos(angle*Math.PI/180);
+    this.body.velocity.y = this.velo*Math.sin(angle*Math.PI/180);
   }
 
   shoot(angle: number, xOffset = 0, yOffset = 0) {
@@ -144,6 +144,7 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
   }
 }
+
 
 // child class for spaceship vehicle
 class Spaceship extends Vehicle {
@@ -177,6 +178,7 @@ class UFO extends Vehicle {
   }
 }
 
+
 // class for asteroids
 class Asteroid extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -191,6 +193,7 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
     this.setImmovable(true);
   }
 }
+
 
 //array for black holes
 const blackHoles: BlackHole[] = [];
@@ -233,6 +236,7 @@ function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
   }
+
 }
 
 let spaceship: Spaceship;
@@ -243,39 +247,6 @@ let asteroidsToRemove: Asteroid[] = [];
 const stars: Phaser.GameObjects.Arc[] = [];
 
 const code = document.querySelector("#code") as HTMLTextAreaElement;
-
-const allActions = {
-  up(v: Vehicle) {
-    v.moveUp();
-  },
-  down(v: Vehicle) {
-    v.moveDown();
-  },
-  left(v: Vehicle) {
-    v.moveLeft();
-  },
-  right(v: Vehicle) {
-    v.moveRight();
-  },
-  shoot(v: Vehicle) {
-    v.shoot(getRandomInt(0, 360));
-  },
-} satisfies Record<string, (v: Vehicle) => void>;
-
-// the list of actions as a static union
-type Action = keyof typeof allActions;
-
-const randomAction = (): Action => {
-  return (Object.keys(allActions) as Action[])[
-    getRandomInt(0, Object.keys(allActions).length)
-  ];
-};
-
-const recursiveRunActions = (actions: Action[], vehicle: Vehicle) => {
-  if (actions.length == 0) return;
-  allActions[actions[0]](vehicle);
-  setTimeout(() => recursiveRunActions(actions.slice(1), vehicle), 100);
-};
 
 function create(this: Phaser.Scene) {
   for (let i = 0; i < 100; i++)
@@ -349,14 +320,35 @@ function create(this: Phaser.Scene) {
       ufo.health--;
       if (ufo.health == 0) {
         ufo.disableBody(true, true);
-        var manCamera = this.cameras.main;
-        manCamera.shake(250);
+        var manCamera = this.cameras.main
+        manCamera.shake(250)
       }
       safeRemove(bullet, bulletsToRemove);
       bullet.destroy();
       bulletsToRemove.push(bullet);
     }
   });
+
+  const allActions = {
+    up(v: Vehicle) {
+      v.moveUp();
+    },
+    down(v: Vehicle) {
+      v.moveDown();
+    },
+    left(v: Vehicle) {
+      v.moveLeft();
+    },
+    right(v: Vehicle) {
+      v.moveRight();
+    },
+    shoot(v: Vehicle) {
+      v.shoot(getRandomInt(0, 360));
+    },
+  } satisfies Record<string, (v: Vehicle) => void>;
+
+  // the list of actions as a static union
+  type Action = keyof typeof allActions;
 
   const runButton = document.querySelector("#run") as HTMLButtonElement;
   runButton.addEventListener("click", () => {
@@ -396,7 +388,13 @@ function create(this: Phaser.Scene) {
 
     // const actions = [...lines];
 
-    recursiveRunActions(parseLines(lines), spaceship);
+    const recursiveRunActions = (actions: Action[]) => {
+      if (actions.length == 0) return;
+      allActions[actions[0]](spaceship);
+      setTimeout(() => recursiveRunActions(actions.slice(1)), 100);
+    };
+
+    recursiveRunActions(parseLines(lines));
   });
 
   const randomButton = document.querySelector("#random") as HTMLButtonElement;
@@ -413,7 +411,11 @@ function create(this: Phaser.Scene) {
             `end`,
           ];
         } else {
-          actions.push(randomAction());
+          actions.push(
+            Object.keys(allActions)[
+              getRandomInt(0, Object.keys(allActions).length)
+            ]
+          );
         }
       }
       return actions;
@@ -469,7 +471,7 @@ function update(this: Phaser.Scene) {
   if (GameOver == true) {
     game.destroy(true);
   }
-
+  
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
@@ -494,6 +496,15 @@ function update(this: Phaser.Scene) {
   });
 }
 
+abstract class Action {
+  abstract run(): Promise<void>;
+}
+
+async function runActions(actions: Action[]) {
+  await actions[0].run();
+  setTimeout(() => runActions(actions.slice(1)), 1000);
+}
+
 function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -505,9 +516,18 @@ function getRandomDouble(min: number, max: number): number {
 }
 
 function ufoTurn() {
-  const actions: Action[] = [];
-  for (let i = 0; i < 20; i++) {
-    actions.push(randomAction());
+  for(let i = 0; i < 5; i++) {
+    let action = getRandomInt(0, 5);
+    if(action == 0) {
+      ufo.moveUp();
+    } else if(action == 1) {
+      ufo.moveDown();
+    } else if(action == 2) {
+      ufo.moveLeft();
+    } else if(action == 3) {
+      ufo.moveRight();
+    } else if(action == 4) {
+      ufo.shoot(180, 88, 27);
+    }
   }
-  recursiveRunActions(actions, ufo);
 }
