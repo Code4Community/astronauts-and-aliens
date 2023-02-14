@@ -1,6 +1,11 @@
 body {
   margin: 0;
 }
+#code {
+	background-color: black;
+	color: #00ff00;
+	font-family: monospace;
+}
 #container {
   display: grid;
   grid-template-columns: 1fr 4fr;
