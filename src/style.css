@@ -8,3 +8,7 @@ body {
   margin: 0 auto;
   max-width: 1400px;
 }
+
+#container {
+  padding: 10px;
+}
