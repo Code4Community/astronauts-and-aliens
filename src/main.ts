@@ -336,15 +336,6 @@ function create(this: Phaser.Scene) {
   this.physics.add.collider(ufo, asteroids);
   this.physics.add.collider(spaceship, ufo);
 
-  const input = document.querySelector("#angle") as HTMLInputElement;
-  const runButton = document.querySelector("#run") as HTMLButtonElement;
-
-  runButton.addEventListener("click", () => {
-    // shoot at 180 degrees,
-    // offset bullet position so it appears to emerge from sprite's gun
-    spaceship.shoot(-parseInt(input.value), -102, 6);
-  });
-
   const moveInput = document.querySelector("#angleMove") as HTMLInputElement;
   const moveButton = document.querySelector("#move") as HTMLButtonElement;
 
@@ -392,15 +383,12 @@ function create(this: Phaser.Scene) {
   smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
-<<<<<<< HEAD
       if(ufo.health == 2){
         
       }
       if(ufo.health == 1){
         
       }
-      if(ufo.health == 0){
-=======
       if (ufo.health == 0) {
         ufo.disableBody(true, true);
         var manCamera = this.cameras.main;
