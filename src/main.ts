@@ -482,6 +482,20 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
 };
 
 function update(this: Phaser.Scene) {
+  var x, y;
+  if (game.input.mousePointer.isDown) {
+      x = game.input.mousePointer.x;
+      y = game.input.mousePointer.y;
+      const box = document.getElementById(
+        'XY',
+      ) as HTMLDivElement;
+      box.innerHTML = "x" + x + "y" + y
+      
+
+
+    
+  }
+  
   var decelerationFactor = 0.6;
 
   spaceship.body.velocity.x *= decelerationFactor;
