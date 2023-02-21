@@ -232,10 +232,22 @@ function image(name: keyof typeof images) {
 function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
-    this.load.spritesheet('SpaceS2', 'assets/Space Ship 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
-    this.load.spritesheet('UFO2', 'assets/UFO 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
-    this.load.spritesheet('SUEXPLODE', 'assets/Exploding object.png', { frameWidth: 250, frameHeight: 250 });
-    this.load.spritesheet('AEXPLODE', 'assets/ASTEROID BREAK.png', { frameWidth: 200, frameHeight: 200 });
+    this.load.spritesheet("SpaceS2", "assets/Space Ship 2 Hearts.png", {
+      frameWidth: 250,
+      frameHeight: 250,
+    });
+    this.load.spritesheet("UFO2", "assets/UFO 2 Hearts.png", {
+      frameWidth: 250,
+      frameHeight: 250,
+    });
+    this.load.spritesheet("SUEXPLODE", "assets/Exploding object.png", {
+      frameWidth: 250,
+      frameHeight: 250,
+    });
+    this.load.spritesheet("AEXPLODE", "assets/ASTEROID BREAK.png", {
+      frameWidth: 200,
+      frameHeight: 200,
+    });
   }
 }
 
@@ -336,14 +348,14 @@ function create(this: Phaser.Scene) {
   this.physics.add.collider(ufo, asteroids);
   this.physics.add.collider(spaceship, ufo);
 
-  const moveInput = document.querySelector("#angleMove") as HTMLInputElement;
-  const moveButton = document.querySelector("#move") as HTMLButtonElement;
+  // const moveInput = document.querySelector("#angleMove") as HTMLInputElement;
+  // const moveButton = document.querySelector("#move") as HTMLButtonElement;
 
-  moveButton.addEventListener("click", () => {
-    // move at x degrees,
-    // offset bullet position so it appears to emerge from sprite's gun
-    spaceship.moveAngle(-parseInt(moveInput.value));
-  });
+  // moveButton.addEventListener("click", () => {
+  //   // move at x degrees,
+  //   // offset bullet position so it appears to emerge from sprite's gun
+  //   spaceship.moveAngle(-parseInt(moveInput.value));
+  // });
 
   smartCollider(this, bullets, asteroids, (bullet, astroid) => {
     safeRemove(bullet, bulletsToRemove);
@@ -352,10 +364,8 @@ function create(this: Phaser.Scene) {
   smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
-      if(spaceship.health == 2){
-
-  
-      }/*
+      if (spaceship.health == 2) {
+      } /*
       if(spaceship.health == 1){
         
       }
@@ -364,13 +374,16 @@ function create(this: Phaser.Scene) {
       }*/
       if (spaceship.health == 0) {
         this.anims.create({
-          key:'SUEXPLODE',
-          frames: this.anims.generateFrameNumbers('SUEXPLODE', { start: 0, end: 8 }),
+          key: "SUEXPLODE",
+          frames: this.anims.generateFrameNumbers("SUEXPLODE", {
+            start: 0,
+            end: 8,
+          }),
           frameRate: 20,
           repeat: 0,
-          hideOnComplete:true
-      });
-        spaceship.play('SUEXPLODE');
+          hideOnComplete: true,
+        });
+        spaceship.play("SUEXPLODE");
         //spaceship.setVisible(false);
         spaceship.disableBody(true, true);
         GameOver = true;
@@ -383,11 +396,9 @@ function create(this: Phaser.Scene) {
   smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
-      if(ufo.health == 2){
-        
+      if (ufo.health == 2) {
       }
-      if(ufo.health == 1){
-        
+      if (ufo.health == 1) {
       }
       if (ufo.health == 0) {
         ufo.disableBody(true, true);
@@ -522,18 +533,12 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
 function update(this: Phaser.Scene) {
   var x, y;
   if (game.input.mousePointer.isDown) {
-      x = game.input.mousePointer.x;
-      y = game.input.mousePointer.y;
-      const box = document.getElementById(
-        'XY',
-      ) as HTMLDivElement;
-      box.innerHTML = "x" + x + "y" + y
-      
-
-
-    
+    x = game.input.mousePointer.x;
+    y = game.input.mousePointer.y;
+    const box = document.getElementById("XY") as HTMLDivElement;
+    box.innerHTML = "x" + x + "y" + y;
   }
-  
+
   var decelerationFactor = 0.6;
 
   spaceship.body.velocity.x *= decelerationFactor;
