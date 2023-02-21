@@ -482,7 +482,30 @@ function update(this: Phaser.Scene) {
   asteroidsToRemove = [];
 
   if (GameOver == true) {
-    game.destroy(true);
+    /*
+    * This is the place to implement ability to play a new game
+    */
+    //game.destroy(true);
+    const resetButton = document.querySelector("#restart") as HTMLButtonElement;
+      resetButton.addEventListener("click", () => {
+          //Delete All Asteroids, Stars, and Black Holes 
+          ufo.disableBody();
+          GameOver=false;
+          //Re-spawn Asteroids, Stars, and Black Holes
+          this.registry.destroy();
+          this.events.destroy();
+
+          /*
+          This call is an errors
+          */
+          this.scene.start();
+          
+
+          //Re-Enable UFO and Asteroid
+
+          //Reset Lives 
+
+      })
   }
   
   bullets.forEach((bullet) => {
