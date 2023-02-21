@@ -38,13 +38,15 @@ const interpreterFunctions: Record<string, () => void> = {
   },
 };
 
-const queue: typeof interpreterFunctions[keyof typeof interpreterFunctions][] =
+const actionQueue: typeof interpreterFunctions[keyof typeof interpreterFunctions][] =
   [];
 
 (
   Object.keys(interpreterFunctions) as (keyof typeof interpreterFunctions)[]
 ).forEach((key) => {
-  C4C.Interpreter.define(key, () => queue.push(interpreterFunctions[key]));
+  C4C.Interpreter.define(key, () =>
+    actionQueue.push(interpreterFunctions[key])
+  );
 });
 
 console.log(editor);
@@ -290,46 +292,6 @@ let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
 
-const code = document.querySelector("#code") as HTMLTextAreaElement;
-
-const allActions = {
-  up(v: Vehicle) {
-    v.moveUp();
-  },
-  down(v: Vehicle) {
-    v.moveDown();
-  },
-  left(v: Vehicle) {
-    v.moveLeft();
-  },
-  right(v: Vehicle) {
-    v.moveRight();
-  },
-  shoot(v: Vehicle) {
-    v.shoot(getRandomInt(0, 360));
-  },
-} satisfies Record<string, (v: Vehicle) => void>;
-
-// the list of actions as a static union
-type Action = keyof typeof allActions;
-
-const randomAction = (): Action => {
-  return (Object.keys(allActions) as Action[])[
-    getRandomInt(0, Object.keys(allActions).length)
-  ];
-};
-
-const runActions = (actions: Action[], vehicle: Vehicle) => {
-  const interval = setInterval(() => {
-    if (actions.length === 0) {
-      clearInterval(interval);
-    } else {
-      allActions[actions[0]](vehicle);
-      actions.splice(0, 1);
-    }
-  }, 100);
-};
-
 function create(this: Phaser.Scene) {
   for (let i = 0; i < 100; i++)
     stars.push(
@@ -418,33 +380,6 @@ function create(this: Phaser.Scene) {
   runButton.addEventListener("click", () => {
     C4C.Interpreter.run(C4C.Editor.getText());
   });
-
-  const randomButton = document.querySelector("#random") as HTMLButtonElement;
-  randomButton.addEventListener("click", () => {
-    // just for testing. set default depth to >0 when nested loops are working
-    const randomProgram = (depth: number = 1): string[] => {
-      let actions: string[] = [];
-      for (let i = 0; i < getRandomInt(5, 200); i++) {
-        if (Math.random() < 0.1 && depth > 0) {
-          actions = [
-            ...actions,
-            `do ${getRandomInt(1, 5)} times`,
-            ...randomProgram(depth - 1).map((it) => "    " + it),
-            `end`,
-          ];
-        } else {
-          actions.push(
-            Object.keys(allActions)[
-              getRandomInt(0, Object.keys(allActions).length)
-            ]
-          );
-        }
-      }
-      return actions;
-    };
-
-    code.value = randomProgram().join("\n");
-  });
 }
 
 const smartCollider = <
@@ -485,6 +420,12 @@ function update(this: Phaser.Scene) {
     y = game.input.mousePointer.y;
     const box = document.getElementById("XY") as HTMLDivElement;
     box.innerHTML = "x" + x + "y" + y;
+  }
+
+  if (Date.now() - lastCodeAction > 0 && actionQueue.length > 0) {
+    actionQueue[0]();
+    actionQueue.splice(0, 1);
+    lastCodeAction = Date.now();
   }
 
   var decelerationFactor = 0.6;
@@ -538,10 +479,25 @@ function getRandomDouble(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
 
-function ufoTurn() {
-  const actions: Action[] = [];
-  for (let i = 0; i < 20; i++) {
-    actions.push(randomAction());
-  }
-  runActions(actions, ufo);
-}
+// todo: convert to new interpreter actions
+// function ufoTurn() {
+//   const actions: Action[] = [];
+//   for (let i = 0; i < 20; i++) {
+//     actions.push(randomAction());
+//   }
+//   runActions(actions, ufo);
+// }
+
+// testing code:
+/*
+10 times
+  25 times
+    down
+    shoot
+  end
+  25 times
+    up
+    shoot
+  end
+end
+*/
