@@ -30,23 +30,19 @@
 
     <div id="container">
       <div class="text-center">
+        
         <p><b>Goal</b></p>
         <p>Get all the UFOs</p>
         <p><b>Instructions</b></p>
         <p>
-          Use the arrow keys to move the UFOs. Code movements for the
-          spaceships.
+          Enter the instructions for your spaceship and press "Go" to run it.
         </p>
-        <p>Angle of attack: <input type="text" id="angle" value="0"/></p>
-        <div><button id="run" type="button2">Run</button></div>
-
-        <p>
-          <br>Use the button below to move the spaceship at a specified angle (in degrees).
-        </p>
-        <p>Angle of movement: <input type="text" id="angleMove" value="0"/></p>
-        <div><button id="move" type="button2">Move</button></div>
+        <textarea id="code" cols="30" rows="10"></textarea>
+        <button id="run">Go</button>
+        <button id="random">Random</button>
       </div>
       <div id="game"></div>
+      <div id="XY"></div>
     </div>
   </body>
 </html>

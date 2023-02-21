@@ -26,6 +26,8 @@ const asteroidCount = 8;
 const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
 let asteroidSpawnChance = 90; //percent chance to spawn asteroid
 
+let GameOver: boolean = false;
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
@@ -244,6 +246,46 @@ let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
 
+const code = document.querySelector("#code") as HTMLTextAreaElement;
+
+const allActions = {
+  up(v: Vehicle) {
+    v.moveUp();
+  },
+  down(v: Vehicle) {
+    v.moveDown();
+  },
+  left(v: Vehicle) {
+    v.moveLeft();
+  },
+  right(v: Vehicle) {
+    v.moveRight();
+  },
+  shoot(v: Vehicle) {
+    v.shoot(getRandomInt(0, 360));
+  },
+} satisfies Record<string, (v: Vehicle) => void>;
+
+// the list of actions as a static union
+type Action = keyof typeof allActions;
+
+const randomAction = (): Action => {
+  return (Object.keys(allActions) as Action[])[
+    getRandomInt(0, Object.keys(allActions).length)
+  ];
+};
+
+const runActions = (actions: Action[], vehicle: Vehicle) => {
+  const interval = setInterval(() => {
+    if (actions.length === 0) {
+      clearInterval(interval);
+    } else {
+      allActions[actions[0]](vehicle);
+      actions.splice(0, 1);
+    }
+  }, 100);
+};
+
 function create(this: Phaser.Scene) {
   for (let i = 0; i < 100; i++)
     stars.push(
@@ -259,24 +301,17 @@ function create(this: Phaser.Scene) {
   ufo = new UFO(this, ufoSpawnX, ufoSpawnY);
 
   document.addEventListener("keydown", (event) => {
+    if (document.activeElement == code) return;
     let cancel = true;
     if (event.key === "w") spaceship.moveUp();
     else if (event.key === "a") spaceship.moveLeft();
     else if (event.key === "s") spaceship.moveDown();
     else if (event.key === "d") spaceship.moveRight();
     else if (event.key === "q") spaceship.shoot(0, -102, 6);
-    else cancel = false;
-    if (cancel) event.preventDefault();
-  });
-
-  document.addEventListener("keydown", (event) => {
-    let cancel = true;
-    if (event.key === "ArrowUp") ufo.moveUp();
+    else if (event.key === "ArrowUp") ufo.moveUp();
     else if (event.key === "ArrowLeft") ufo.moveLeft();
     else if (event.key === "ArrowDown") ufo.moveDown();
     else if (event.key === "ArrowRight") ufo.moveRight();
-    // shoot at 180 degrees,
-    // offset bullet position so it appears to emerge from sprite's gun
     else if (event.key === "p") ufo.shoot(180, 88, 27);
     else cancel = false;
     if (cancel) event.preventDefault();
@@ -300,7 +335,6 @@ function create(this: Phaser.Scene) {
   this.physics.add.collider(spaceship, asteroids);
   this.physics.add.collider(ufo, asteroids);
   this.physics.add.collider(spaceship, ufo);
-  
 
   const input = document.querySelector("#angle") as HTMLInputElement;
   const runButton = document.querySelector("#run") as HTMLButtonElement;
@@ -347,28 +381,124 @@ function create(this: Phaser.Scene) {
       });
         spaceship.play('SUEXPLODE');
         //spaceship.setVisible(false);
+        spaceship.disableBody(true, true);
+        GameOver = true;
       }
       safeRemove(bullet, bulletsToRemove);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
     }
   });
   smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
-/*
+<<<<<<< HEAD
       if(ufo.health == 2){
         
       }
       if(ufo.health == 1){
         
       }
-      */
+      if(ufo.health == 0){
+=======
       if (ufo.health == 0) {
-        ufo.setVisible(false);
+        ufo.disableBody(true, true);
         var manCamera = this.cameras.main;
         manCamera.shake(250);
       }
       safeRemove(bullet, bulletsToRemove);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
     }
+  });
+
+  const allActions = {
+    up(v: Vehicle) {
+      v.moveUp();
+    },
+    down(v: Vehicle) {
+      v.moveDown();
+    },
+    left(v: Vehicle) {
+      v.moveLeft();
+    },
+    right(v: Vehicle) {
+      v.moveRight();
+    },
+    shoot(v: Vehicle) {
+      v.shoot(getRandomInt(0, 360));
+    },
+  } satisfies Record<string, (v: Vehicle) => void>;
+
+  // the list of actions as a static union
+  type Action = keyof typeof allActions;
+
+  const runButton = document.querySelector("#run") as HTMLButtonElement;
+  runButton.addEventListener("click", () => {
+    const lines = code.value.split("\n") as Action[];
+
+    console.log(lines);
+
+    const parseLines = (lines: string[]): Action[] => {
+      let result: Action[] = [];
+      let inRepeat = false;
+      let numRepeatTimes: number = 0;
+      let repeatLines = [] as Action[];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.substring(0, 3) == "do ") {
+          inRepeat = true;
+          numRepeatTimes = parseInt(line.split(" ")[1]);
+          repeatLines = [];
+        } else if (line.substring(0, 3) == "end") {
+          inRepeat = false;
+          const subActions = parseLines(repeatLines);
+          result = [
+            ...result,
+            ...Array(numRepeatTimes)
+              .fill(0)
+              .flatMap(() => subActions),
+          ];
+        } else if (inRepeat) {
+          repeatLines.push(line as Action);
+        } else {
+          result = [...result, line as Action];
+        }
+        console.log(result);
+      }
+      return result;
+    };
+
+    // const actions = [...lines];
+
+    runActions(parseLines(lines), spaceship);
+  });
+
+  const randomButton = document.querySelector("#random") as HTMLButtonElement;
+  randomButton.addEventListener("click", () => {
+    // just for testing. set default depth to >0 when nested loops are working
+    const randomProgram = (depth: number = 1): string[] => {
+      let actions: string[] = [];
+      for (let i = 0; i < getRandomInt(5, 200); i++) {
+        if (Math.random() < 0.1 && depth > 0) {
+          actions = [
+            ...actions,
+            `do ${getRandomInt(1, 5)} times`,
+            ...randomProgram(depth - 1).map((it) => "    " + it),
+            `end`,
+          ];
+        } else {
+          actions.push(
+            Object.keys(allActions)[
+              getRandomInt(0, Object.keys(allActions).length)
+            ]
+          );
+        }
+      }
+      return actions;
+    };
+
+    code.value = randomProgram().join("\n");
   });
 }
 
@@ -402,6 +532,20 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
 };
 
 function update(this: Phaser.Scene) {
+  var x, y;
+  if (game.input.mousePointer.isDown) {
+      x = game.input.mousePointer.x;
+      y = game.input.mousePointer.y;
+      const box = document.getElementById(
+        'XY',
+      ) as HTMLDivElement;
+      box.innerHTML = "x" + x + "y" + y
+      
+
+
+    
+  }
+  
   var decelerationFactor = 0.6;
 
   spaceship.body.velocity.x *= decelerationFactor;
@@ -414,6 +558,10 @@ function update(this: Phaser.Scene) {
 
   bulletsToRemove = [];
   asteroidsToRemove = [];
+
+  if (GameOver == true) {
+    game.destroy(true);
+  }
 
   bullets.forEach((bullet) => {
     if (
@@ -439,15 +587,6 @@ function update(this: Phaser.Scene) {
   });
 }
 
-abstract class Action {
-  abstract run(): Promise<void>;
-}
-
-async function runActions(actions: Action[]) {
-  await actions[0].run();
-  setTimeout(() => runActions(actions.slice(1)), 1000);
-}
-
 function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -456,4 +595,12 @@ function getRandomInt(min: number, max: number): number {
 
 function getRandomDouble(min: number, max: number): number {
   return Math.random() * (max - min) + min;
+}
+
+function ufoTurn() {
+  const actions: Action[] = [];
+  for (let i = 0; i < 20; i++) {
+    actions.push(randomAction());
+  }
+  runActions(actions, ufo);
 }
