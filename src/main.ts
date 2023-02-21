@@ -230,6 +230,10 @@ function image(name: keyof typeof images) {
 function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
+    this.load.spritesheet('SpaceS2', 'assets/Space Ship 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('UFO2', 'assets/UFO 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('SUEXPLODE', 'assets/Exploding object.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('AEXPLODE', 'assets/ASTEROID BREAK.png', { frameWidth: 200, frameHeight: 200 });
   }
 }
 
@@ -296,6 +300,7 @@ function create(this: Phaser.Scene) {
   this.physics.add.collider(spaceship, asteroids);
   this.physics.add.collider(ufo, asteroids);
   this.physics.add.collider(spaceship, ufo);
+  
 
   const input = document.querySelector("#angle") as HTMLInputElement;
   const runButton = document.querySelector("#run") as HTMLButtonElement;
@@ -322,18 +327,26 @@ function create(this: Phaser.Scene) {
   smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
-<<<<<<< HEAD
       if(spaceship.health == 2){
 
-      }
+  
+      }/*
       if(spaceship.health == 1){
         
       }
       if(spaceship.health == 0){
-=======
+
+      }*/
       if (spaceship.health == 0) {
->>>>>>> 18d6d1aa65190af30854f6feab56d30b12b9e036
-        spaceship.setVisible(false);
+        this.anims.create({
+          key:'SUEXPLODE',
+          frames: this.anims.generateFrameNumbers('SUEXPLODE', { start: 0, end: 8 }),
+          frameRate: 20,
+          repeat: 0,
+          hideOnComplete:true
+      });
+        spaceship.play('SUEXPLODE');
+        //spaceship.setVisible(false);
       }
       safeRemove(bullet, bulletsToRemove);
     }
@@ -341,17 +354,15 @@ function create(this: Phaser.Scene) {
   smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
-<<<<<<< HEAD
+/*
       if(ufo.health == 2){
         
       }
       if(ufo.health == 1){
         
       }
-      if(ufo.health == 0){
-=======
+      */
       if (ufo.health == 0) {
->>>>>>> 18d6d1aa65190af30854f6feab56d30b12b9e036
         ufo.setVisible(false);
         var manCamera = this.cameras.main;
         manCamera.shake(250);
