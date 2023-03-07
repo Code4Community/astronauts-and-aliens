@@ -490,20 +490,40 @@ function update(this: Phaser.Scene) {
       resetButton.addEventListener("click", () => {
           //Delete All Asteroids, Stars, and Black Holes 
           ufo.disableBody();
+          spaceship.disableBody();
           GameOver=false;
+
+          //TODO 
           //Re-spawn Asteroids, Stars, and Black Holes
-          this.registry.destroy();
-          this.events.destroy();
-
-          /*
-          This call is an errors
-          */
-          this.scene.start();
-          
-
+          //RESPAWN STARS
+          for (let i = 0; i < 100; i++)
+            stars.push(
+                this.add.circle(
+                getRandomInt(0, this.renderer.width),
+                getRandomInt(0, this.renderer.height),
+                getRandomDouble(0.5, 3),
+                0xffffff
+                )   
+            );
+          //RESPAWN ASTEROIDS
+          for (let i = 0; i < asteroidCount; i++) {
+            // if an asteroid is chosen to be spawned
+            if (getRandomInt(0, 99) < asteroidSpawnChance) {
+              asteroidSpawnChance -= 10;
+              // create asteroid and add colliders
+              asteroids[i] = new Asteroid(
+                this,
+                getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
+                asteroidSpawnYMin + i * asteroidHeight
+              );
+            } else {
+              asteroidSpawnChance += 10;
+            }
+          }
+          //Figger out how to do black holes
           //Re-Enable UFO and Asteroid
-
-          //Reset Lives 
+          spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY);
+          ufo = new UFO(this, ufoSpawnX, ufoSpawnY); 
 
       })
   }
