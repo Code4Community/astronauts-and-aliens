@@ -463,12 +463,13 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
 let lastCodeAction = 0;
 
 function update(this: Phaser.Scene) {
-  var x, y;
+  var x: number;
+  var y: number;
   if (game.input.mousePointer.isDown) {
     x = game.input.mousePointer.x;
     y = game.input.mousePointer.y;
     const box = document.getElementById("XY") as HTMLDivElement;
-    box.innerHTML = "x" + x + "y" + y;
+    box.innerHTML = "x" + Math.round(x) + "y" + Math.round(y);
   }
 
   if (Date.now() - lastCodeAction > 0 && actionQueue.length > 0) {
