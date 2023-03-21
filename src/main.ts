@@ -23,6 +23,7 @@ const asteroidSpawnYMin = 50;
 const asteroidSpawnYMax = screenHeight - 50;
 
 const asteroidCount = 8;
+
 const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
 let asteroidSpawnChance = 90; //percent chance to spawn asteroid
 
@@ -87,6 +88,10 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
   velo: number;
   bulletType: typeof Bullet;
   health: number;
+  initX: number;
+  initY: number;
+  initPicture: keyof typeof images;
+  initVelo: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -108,6 +113,24 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.velo = velo;
     this.bulletType = bulletType;
     this.health = 3;
+
+    this.initX = x;
+    this.initY = y; 
+    this.initPicture = picture;
+    this.initVelo = velo;
+
+  }
+
+  resetVehicle() {
+      this.health = 3;
+    ;
+      
+      this.alive = true;
+      this.enableBody(true,this.initX,this.initY,true,true)
+      this.setVisible(true);
+      this.velo = this.initVelo;
+
+
   }
 
   moveUp() {
@@ -192,6 +215,7 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
     this.setCollideWorldBounds(true);
     this.setImmovable(true);
   }
+
 }
 
 
@@ -489,23 +513,31 @@ function update(this: Phaser.Scene) {
     const resetButton = document.querySelector("#restart") as HTMLButtonElement;
       resetButton.addEventListener("click", () => {
           //Delete All Asteroids, Stars, and Black Holes 
-          ufo.disableBody();
-          spaceship.disableBody();
           GameOver=false;
-
           //TODO 
           //Re-spawn Asteroids, Stars, and Black Holes
           //RESPAWN STARS
-          for (let i = 0; i < 100; i++)
-            stars.push(
-                this.add.circle(
-                getRandomInt(0, this.renderer.width),
-                getRandomInt(0, this.renderer.height),
-                getRandomDouble(0.5, 3),
-                0xffffff
-                )   
-            );
-          //RESPAWN ASTEROIDS
+          // for (let i = 0; i < 100; i++){
+          //   stars.push(
+          //   this.add.circle(
+          //     getRandomInt(0, this.renderer.width),
+          //     getRandomInt(0, this.renderer.height),
+          //     getRandomDouble(0.5, 3),
+          //     0xffffff
+          //     )
+          //   );
+          // }
+          //Delete ASTEROIDS
+          for(let i = 0; i <asteroidCount; i++){
+              safeRemove(asteroids[i],asteroidsToRemove);
+              /*
+              *
+              * TODO destroy in safe remove is creating errors fix this
+              * 
+              */
+          }
+          asteroidsToRemove = [];
+          asteroidSpawnChance = 90;
           for (let i = 0; i < asteroidCount; i++) {
             // if an asteroid is chosen to be spawned
             if (getRandomInt(0, 99) < asteroidSpawnChance) {
@@ -520,10 +552,14 @@ function update(this: Phaser.Scene) {
               asteroidSpawnChance += 10;
             }
           }
-          //Figger out how to do black holes
+          //Figger out how to do black holes -- Not Needed for now
+          
+
+
           //Re-Enable UFO and Asteroid
-          spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY);
-          ufo = new UFO(this, ufoSpawnX, ufoSpawnY); 
+          
+
+          ufo.resetVehicle();spaceship.resetVehicle();
 
       })
   }
