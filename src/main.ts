@@ -379,7 +379,8 @@ function create(this: Phaser.Scene) {
         spaceship.play("SUEXPLODE");
         //spaceship.setVisible(false);
         spaceship.disableBody(true, true);
-        GameOver = true;
+        endGame(spaceship);
+
       }
       safeRemove(bullet, bulletsToRemove);
       bullet.destroy();
@@ -397,6 +398,7 @@ function create(this: Phaser.Scene) {
         ufo.disableBody(true, true);
         var manCamera = this.cameras.main;
         manCamera.shake(250);
+        endGame(ufo);
       }
       safeRemove(bullet, bulletsToRemove);
       bullet.destroy();
@@ -491,10 +493,6 @@ function update(this: Phaser.Scene) {
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
-  if (GameOver == true) {
-    game.destroy(true);
-  }
-
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
@@ -527,6 +525,22 @@ function getRandomInt(min: number, max: number): number {
 
 function getRandomDouble(min: number, max: number): number {
   return Math.random() * (max - min) + min;
+}
+
+function endGame(vehicle: Vehicle) {
+    // need to determine if vehicle is a spaceship or ufo
+    if (GameOver == true) {
+        game.scene.pause("default");
+        bullets.forEach(function (bullet) {
+            bullet.destroy();
+        });
+        displayGameOver();
+        return;
+      }
+}
+
+function displayGameOver() {
+
 }
 
 // todo: convert to new interpreter actions
