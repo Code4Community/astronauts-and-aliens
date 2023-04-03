@@ -468,7 +468,7 @@ function update(this: Phaser.Scene) {
     x = game.input.mousePointer.x;
     y = game.input.mousePointer.y;
     const box = document.getElementById("XY") as HTMLDivElement;
-    box.innerHTML = "x" + x + "y" + y;
+    box.innerHTML = "x" + Math.round(x) + "y" + Math.round(y);
   }
 
   if (Date.now() - lastCodeAction > 500 && actionQueue.length > 0) {
