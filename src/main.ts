@@ -158,6 +158,7 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.velo = velo;
     this.bulletType = bulletType;
     this.health = 3;
+    this.type;
   }
 
   moveUp() {
@@ -208,6 +209,7 @@ class Spaceship extends Vehicle {
     this.setScale(0.8, 0.8);
     this.setBounce(0.3);
     this.setCollideWorldBounds(true);
+    this.type = "spaceship";
   }
 }
 
@@ -224,6 +226,7 @@ class UFO extends Vehicle {
     this.setScale(0.8, 0.8);
     this.setBounce(0.3);
     this.setCollideWorldBounds(true);
+    this.type = "ufo"
   }
 }
 
@@ -308,7 +311,10 @@ let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
 
+let scene: Phaser.Scene;
+
 function create(this: Phaser.Scene) {
+  scene = this;
   for (let i = 0; i < 100; i++)
     stars.push(
       this.add.circle(
@@ -379,8 +385,7 @@ function create(this: Phaser.Scene) {
         spaceship.play("SUEXPLODE");
         //spaceship.setVisible(false);
         spaceship.disableBody(true, true);
-        endGame(spaceship);
-
+        endGame(scene, spaceship);
       }
       safeRemove(bullet, bulletsToRemove);
       bullet.destroy();
@@ -398,7 +403,7 @@ function create(this: Phaser.Scene) {
         ufo.disableBody(true, true);
         var manCamera = this.cameras.main;
         manCamera.shake(250);
-        endGame(ufo);
+        endGame(scene, ufo);
       }
       safeRemove(bullet, bulletsToRemove);
       bullet.destroy();
@@ -527,21 +532,21 @@ function getRandomDouble(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
 
-function endGame(vehicle: Vehicle) {
+function endGame(scene: Phaser.Scene, vehicle: Vehicle) {
     // need to determine if vehicle is a spaceship or ufo
-    if (GameOver == true) {
-        game.scene.pause("default");
-        bullets.forEach(function (bullet) {
-            bullet.destroy();
-        });
-        displayGameOver();
-        return;
-      }
+    game.scene.pause("default");
+    // bullets.forEach(function (bullet) {
+    //     bullet.destroy();
+    // });
+    let playerWin = (vehicle.type == "spaceship")
+    // Display words "GAME OVER"
+    console.log("GAME OVER!");
+    scene.add.text(screenWidth/2, screenHeight/2, 'GAME OVER', { fontSize: '75px' }).setOrigin(0.5);
+    let textMessage = (vehicle.type == "spaceship") ? 'BUMMER! YOU LOST!': 'CONGRATULATIONS! YOU WIN!';
+    scene.add.text(screenWidth/2, screenHeight/2 + 100, textMessage, { fontSize: '50px' }).setOrigin(0.5);
+    return;
 }
 
-function displayGameOver() {
-
-}
 
 // todo: convert to new interpreter actions
 // function ufoTurn() {
