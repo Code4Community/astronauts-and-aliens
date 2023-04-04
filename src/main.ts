@@ -2,6 +2,8 @@ import "./style.css";
 import * as Phaser from "phaser";
 // @ts-ignore
 import C4C from "c4c-lib";
+import { Level, createLevelFromGameObjects } from "./level";
+import level1 from "./levels/level1.json?raw";
 
 declare const C4C: {
   Editor: {
@@ -78,6 +80,8 @@ let asteroidSpawnChance = 90; //percent chance to spawn asteroid
 
 let GameOver: boolean = false;
 
+let editorMode = false;
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
@@ -95,6 +99,18 @@ const config: Phaser.Types.Core.GameConfig = {
     create,
     update,
   },
+};
+
+const loadObjectsFromLevel = (scene: Phaser.Scene, level: Level) => {
+  spaceship.x = level.spaceshipPosition.x;
+  spaceship.y = level.spaceshipPosition.y;
+
+  ufo.x = level.ufoPosition.x;
+  ufo.y = level.ufoPosition.y;
+
+  level.objects.forEach((object) =>
+    asteroids.push(new Asteroid(scene, object.x, object.y))
+  );
 };
 
 // array of bullets, each fired bullet is appended here
@@ -132,7 +148,7 @@ class SpaceshipLaser extends Bullet {
 }
 
 // parent class for ufo/spaceship
-class Vehicle extends Phaser.Physics.Arcade.Sprite {
+export class Vehicle extends Phaser.Physics.Arcade.Sprite {
   alive: boolean = true;
   velo: number;
   bulletType: typeof Bullet;
@@ -228,7 +244,7 @@ class UFO extends Vehicle {
 }
 
 // class for asteroids
-class Asteroid extends Phaser.Physics.Arcade.Sprite {
+export class Asteroid extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
@@ -308,7 +324,31 @@ let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
 
+let scene: Phaser.Scene;
+
 function create(this: Phaser.Scene) {
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "e") {
+      editorMode = !editorMode;
+    } else if (event.key === "a") {
+      asteroids.push(
+        new Asteroid(
+          this,
+          this.game.input.mousePointer.x,
+          this.game.input.mousePointer.y
+        )
+      );
+    } else if (event.key === "s") {
+      prompt(
+        "level code:",
+        createLevelFromGameObjects(spaceship, ufo, asteroids)
+      );
+    } else if (event.key === "d") {
+      safeRemove(getClosestObject(this) as Asteroid, asteroids);
+    }
+  });
+
+  scene = this;
   for (let i = 0; i < 100; i++)
     stars.push(
       this.add.circle(
@@ -322,20 +362,24 @@ function create(this: Phaser.Scene) {
   spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY);
   ufo = new UFO(this, ufoSpawnX, ufoSpawnY);
 
-  for (let i = 0; i < asteroidCount; i++) {
-    // if an asteroid is chosen to be spawned
-    if (getRandomInt(0, 99) < asteroidSpawnChance) {
-      asteroidSpawnChance -= 10;
-      // create asteroid and add colliders
-      asteroids[i] = new Asteroid(
-        this,
-        getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
-        asteroidSpawnYMin + i * asteroidHeight
-      );
-    } else {
-      asteroidSpawnChance += 10;
-    }
-  }
+  loadObjectsFromLevel(this, JSON.parse(level1) as Level);
+
+  // for (let i = 0; i < asteroidCount; i++) {
+  //   // if an asteroid is chosen to be spawned
+  //   if (getRandomInt(0, 99) < asteroidSpawnChance) {
+  //     asteroidSpawnChance -= 10;
+  //     // create asteroid and add colliders
+  //     asteroids.push(
+  //       new Asteroid(
+  //         this,
+  //         getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
+  //         asteroidSpawnYMin + i * asteroidHeight
+  //       )
+  //     );
+  //   } else {
+  //     asteroidSpawnChance += 10;
+  //   }
+  // }
 
   this.physics.add.collider(spaceship, asteroids);
   this.physics.add.collider(ufo, asteroids);
@@ -460,15 +504,33 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
 
 let lastCodeAction = 0;
 
+let clicking = false;
+let selectedObject: Phaser.Physics.Arcade.Sprite | undefined = undefined;
+
 function update(this: Phaser.Scene) {
   if (gameState !== "PLAYING") return;
+  if (clicking && selectedObject !== undefined) {
+    selectedObject.x = game.input.mousePointer.x;
+    selectedObject.y = game.input.mousePointer.y;
+  }
   var x;
   var y;
   if (game.input.mousePointer.isDown) {
+    if (!clicking) {
+      clicking = true;
+      if (editorMode) {
+        selectedObject = getClosestObject(this);
+      }
+    }
     x = game.input.mousePointer.x;
     y = game.input.mousePointer.y;
     const box = document.getElementById("XY") as HTMLDivElement;
     box.innerHTML = "x" + Math.round(x) + "y" + Math.round(y);
+  } else {
+    if (clicking) {
+      clicking = false;
+      console.log("not clicking");
+    }
   }
 
   if (Date.now() - lastCodeAction > 500 && actionQueue.length > 0) {
@@ -555,4 +617,19 @@ const endGame = (state: GameState) => {
   gameState = state;
   document.querySelector(".status")!.innerHTML =
     state === "SPACESHIP_WIN" ? "YOU WIN!" : "YOU LOSE!";
+};
+
+const getClosestObject = (scene: Phaser.Scene) => {
+  const closestObject = [spaceship, ufo, ...asteroids]
+    .map((o) => ({
+      distance: Math.sqrt(
+        Math.pow(game.input.mousePointer.x - o.body.x, 2) +
+          Math.pow(game.input.mousePointer.y - o.body.y, 2)
+      ),
+      o,
+    }))
+    .reduce((currentClosest, o) =>
+      o.distance < currentClosest.distance ? o : currentClosest
+    ).o;
+  return closestObject;
 };
