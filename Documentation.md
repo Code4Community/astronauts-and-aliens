@@ -7,6 +7,10 @@
 - Bullets held in bullets[]
 - asteroids held in asteroids[]
 
+## Ideas:
+- Have event caller in safeRemove() to pop next instruction of of queue
+- Have event caller when spaceship/ufo decrease speed to zero (near zero)
+
 ## Need to do:
 - Work out player and CPU turns
 - Work out colliders between vehicles and enemy's lasers

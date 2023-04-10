@@ -8,3 +8,14 @@ body {
   margin: 0 auto;
   max-width: 1400px;
 }
+
+#container {
+  padding: 10px;
+}
+
+.status {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  font-size: 100px;
+}
