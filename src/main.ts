@@ -108,9 +108,16 @@ const loadObjectsFromLevel = (scene: Phaser.Scene, level: Level) => {
   ufo.x = level.ufoPosition.x;
   ufo.y = level.ufoPosition.y;
 
-  level.objects.forEach((object) =>
-    asteroids.push(new Asteroid(scene, object.x, object.y))
-  );
+  level.objects.forEach((object) => {
+    switch (object.type) {
+      case "astroid":
+        asteroids.push(new Asteroid(scene, object.x, object.y, "normal"));
+        break;
+      case "black-hole":
+        blackHoles.push(new BlackHole(scene, object.x, object.y));
+        break;
+    }
+  });
 };
 
 // array of bullets, each fired bullet is appended here
@@ -243,9 +250,11 @@ class UFO extends Vehicle {
   }
 }
 
+type AstroidType = "normal" | "unbreakable";
+
 // class for asteroids
 export class Asteroid extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, type: AstroidType) {
     // When we determine the file name of the sprite for spaceship we need
     // to replace 'Spaceship' with the file name
     super(scene, x, y, image("asteroid"));
@@ -328,23 +337,35 @@ let scene: Phaser.Scene;
 
 function create(this: Phaser.Scene) {
   document.addEventListener("keydown", (event) => {
-    if (event.key === "e") {
+    if (event.key === "~") {
       editorMode = !editorMode;
-    } else if (event.key === "a") {
-      asteroids.push(
-        new Asteroid(
-          this,
-          this.game.input.mousePointer.x,
-          this.game.input.mousePointer.y
-        )
-      );
-    } else if (event.key === "s") {
-      prompt(
-        "level code:",
-        createLevelFromGameObjects(spaceship, ufo, asteroids)
-      );
-    } else if (event.key === "d") {
-      safeRemove(getClosestObject(this) as Asteroid, asteroids);
+    }
+    if (editorMode) {
+      if (event.key === "a") {
+        asteroids.push(
+          new Asteroid(
+            this,
+            this.game.input.mousePointer.x,
+            this.game.input.mousePointer.y,
+            "normal"
+          )
+        );
+      } else if (event.key === "s") {
+        prompt(
+          "level code:",
+          createLevelFromGameObjects(spaceship, ufo, asteroids)
+        );
+      } else if (event.key === "b") {
+        blackHoles.push(
+          new BlackHole(
+            this,
+            this.game.input.mousePointer.x,
+            this.game.input.mousePointer.y
+          )
+        );
+      } else if (event.key === "d") {
+        safeRemove(getClosestObject(this) as Asteroid, asteroidsToRemove);
+      }
     }
   });
 
@@ -509,7 +530,7 @@ let selectedObject: Phaser.Physics.Arcade.Sprite | undefined = undefined;
 
 function update(this: Phaser.Scene) {
   if (gameState !== "PLAYING") return;
-  if (clicking && selectedObject !== undefined) {
+  if (editorMode && clicking && selectedObject !== undefined) {
     selectedObject.x = game.input.mousePointer.x;
     selectedObject.y = game.input.mousePointer.y;
   }
@@ -529,7 +550,6 @@ function update(this: Phaser.Scene) {
   } else {
     if (clicking) {
       clicking = false;
-      console.log("not clicking");
     }
   }
 

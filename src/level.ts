@@ -1,5 +1,7 @@
 import { Asteroid, Vehicle } from "./main";
 
+type ObjectType = "astroid" | "black-hole";
+
 export type Level = {
   spaceshipPosition: {
     x: number;
@@ -10,7 +12,7 @@ export type Level = {
     y: number;
   };
   // todo: more object types
-  objects: { type: "astroid"; x: number; y: number }[];
+  objects: { type: ObjectType; x: number; y: number }[];
 };
 
 export const createLevelFromGameObjects = (
