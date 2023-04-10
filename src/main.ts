@@ -533,17 +533,16 @@ function getRandomDouble(min: number, max: number): number {
 }
 
 function endGame(scene: Phaser.Scene, vehicle: Vehicle) {
-    // need to determine if vehicle is a spaceship or ufo
     game.scene.pause("default");
     // bullets.forEach(function (bullet) {
     //     bullet.destroy();
     // });
-    let playerWin = (vehicle.type == "spaceship")
     // Display words "GAME OVER"
     console.log("GAME OVER!");
     scene.add.text(screenWidth/2, screenHeight/2, 'GAME OVER', { fontSize: '75px' }).setOrigin(0.5);
-    let textMessage = (vehicle.type == "spaceship") ? 'BUMMER! YOU LOST!': 'CONGRATULATIONS! YOU WIN!';
-    scene.add.text(screenWidth/2, screenHeight/2 + 100, textMessage, { fontSize: '50px' }).setOrigin(0.5);
+    let textMessage: [string, string]
+    textMessage = (vehicle.type == "spaceship") ? ['BUMMER! YOU LOST!', 'red']: ['CONGRATULATIONS! YOU WIN!', 'green'];
+    scene.add.text(screenWidth/2, screenHeight/2 + 100, textMessage[0], { fontSize: '50px', color: textMessage[1] }).setOrigin(0.5);
     return;
 }
 
