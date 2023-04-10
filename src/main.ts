@@ -528,18 +528,22 @@ function update(this: Phaser.Scene) {
           //   );
           // }
           //Delete ASTEROIDS
-          for(let i = 0; i <asteroidCount; i++){
-              safeRemove(asteroids[i],asteroidsToRemove);
-              /*
-              *
-              * TODO destroy in safe remove is creating errors fix this
-              * 
-              */
+          for(let i = 0; i<asteroidCount; i++){
+            try {
+              asteroids[i].disableBody(true,true);
+            }
+            catch(err) {
+              //Catching Error that body is already disabled
+              //Do Nothing Here
+            }
+            
           }
+          asteroids.splice(0,asteroids.length)
           asteroidsToRemove = [];
           asteroidSpawnChance = 90;
           for (let i = 0; i < asteroidCount; i++) {
             // if an asteroid is chosen to be spawned
+            asteroids[i] ;
             if (getRandomInt(0, 99) < asteroidSpawnChance) {
               asteroidSpawnChance -= 10;
               // create asteroid and add colliders
@@ -552,14 +556,17 @@ function update(this: Phaser.Scene) {
               asteroidSpawnChance += 10;
             }
           }
-          //Figger out how to do black holes -- Not Needed for now
+          
+
+          //figure out how to do black holes -- Not Needed for now
           
 
 
           //Re-Enable UFO and Asteroid
           
 
-          ufo.resetVehicle();spaceship.resetVehicle();
+          ufo.resetVehicle();
+          spaceship.resetVehicle();
 
       })
   }
