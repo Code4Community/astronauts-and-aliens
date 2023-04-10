@@ -14,7 +14,9 @@ declare const C4C: {
   };
 };
 
-console.log(C4C);
+type GameState = "PLAYING" | "UFO_WIN" | "SPACESHIP_WIN";
+
+let gameState: GameState = "PLAYING";
 
 const editor = C4C.Editor.create(document.querySelector(".code")!);
 
@@ -48,8 +50,6 @@ const actionQueue: typeof interpreterFunctions[keyof typeof interpreterFunctions
     actionQueue.push(interpreterFunctions[key])
   );
 });
-
-console.log(editor);
 
 // screen size and camera
 const screenWidth = 1000;
@@ -260,7 +260,7 @@ class BlackHole extends Phaser.Physics.Arcade.Sprite {
 }
 
 // Define the game
-var game = new Phaser.Game(config);
+const game = new Phaser.Game(config);
 
 // asset locations
 const images = {
@@ -360,7 +360,7 @@ function create(this: Phaser.Scene) {
     safeRemove(bullet, bulletsToRemove);
     safeRemove(astroid, asteroidsToRemove);
   });
-  smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
+  smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
       if (spaceship.health == 2) {
@@ -388,11 +388,9 @@ function create(this: Phaser.Scene) {
         endGame(scene, spaceship);
       }
       safeRemove(bullet, bulletsToRemove);
-      bullet.destroy();
-      bulletsToRemove.push(bullet);
     }
   });
-  smartOverlap(this, bullets, ufo, (bullet, ufo) => {
+  smartCollider(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
       if (ufo.health == 2) {
@@ -406,8 +404,6 @@ function create(this: Phaser.Scene) {
         endGame(scene, ufo);
       }
       safeRemove(bullet, bulletsToRemove);
-      bullet.destroy();
-      bulletsToRemove.push(bullet);
     }
   });
 
@@ -434,7 +430,7 @@ function create(this: Phaser.Scene) {
 
   const runButton = document.querySelector("#run") as HTMLButtonElement;
   runButton.addEventListener("click", () => {
-    C4C.Interpreter.run(C4C.Editor.getText());
+    C4C.Interpreter.run(C4C.Editor.getText().replace(/forever/, "100000"));
   });
 }
 
@@ -470,8 +466,9 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
 let lastCodeAction = 0;
 
 function update(this: Phaser.Scene) {
-  var x: number;
-  var y: number;
+  if (gameState !== "PLAYING") return;
+  var x;
+  var y;
   if (game.input.mousePointer.isDown) {
     x = game.input.mousePointer.x;
     y = game.input.mousePointer.y;
@@ -479,7 +476,7 @@ function update(this: Phaser.Scene) {
     box.innerHTML = "x" + Math.round(x) + "y" + Math.round(y);
   }
 
-  if (Date.now() - lastCodeAction > 0 && actionQueue.length > 0) {
+  if (Date.now() - lastCodeAction > 500 && actionQueue.length > 0) {
     actionQueue[0]();
     actionQueue.splice(0, 1);
     lastCodeAction = Date.now();
@@ -569,3 +566,9 @@ function endGame(scene: Phaser.Scene, vehicle: Vehicle) {
   end
 end
 */
+
+const endGame = (state: GameState) => {
+  gameState = state;
+  document.querySelector(".status")!.innerHTML =
+    state === "SPACESHIP_WIN" ? "YOU WIN!" : "YOU LOSE!";
+};
