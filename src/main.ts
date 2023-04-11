@@ -1,4 +1,6 @@
 import "./style.css";
+import { Vehicle, Spaceship, UFO, Bullet, SpaceshipLaser, UFOLaser, Asteroid, BlackHole } from './objects';
+import * as Consts from './consts'
 import * as Phaser from "phaser";
 // @ts-ignore
 import C4C from "c4c-lib";
@@ -97,173 +99,13 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 };
 
-// array of bullets, each fired bullet is appended here
-const bullets: Bullet[] = [];
 let bulletsToRemove: Bullet[] = [];
-
-// parent for fired bullet
-class Bullet extends Phaser.Physics.Arcade.Sprite {
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    picture: keyof typeof images
-  ) {
-    super(scene, x, y, image(picture));
-    scene.add.existing(this);
-    this.setScale(0.3);
-    scene.physics.add.existing(this);
-    bullets.push(this);
-  }
-}
-
-// child ufo laser class
-class UFOLaser extends Bullet {
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, image("lazerUFO"));
-  }
-}
-
-// child spaceship laser class
-class SpaceshipLaser extends Bullet {
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, image("lazerSpaceship"));
-  }
-}
-
-// parent class for ufo/spaceship
-class Vehicle extends Phaser.Physics.Arcade.Sprite {
-  alive: boolean = true;
-  velo: number;
-  bulletType: typeof Bullet;
-  health: number;
-
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    picture: keyof typeof images,
-    velo: number,
-    bulletType: typeof Bullet = Bullet
-  ) {
-    // When we determine the file name of the sprite for spaceship we need
-    // to replace 'Spaceship' with the file name
-    super(scene, x, y, image(picture));
-    scene.add.existing(this);
-    scene.physics.add.existing(this);
-    this.setScale(0.8, 0.8);
-    this.setBounce(0);
-    this.setBounceX(0);
-    this.setCollideWorldBounds(true);
-    this.velo = velo;
-    this.bulletType = bulletType;
-    this.health = 3;
-    this.type;
-  }
-
-  moveUp() {
-    this.body.velocity.y = -this.velo;
-  }
-
-  moveDown() {
-    this.body.velocity.y = this.velo;
-  }
-
-  moveLeft() {
-    this.body.velocity.x = -this.velo;
-  }
-
-  moveRight() {
-    this.body.velocity.x = this.velo;
-  }
-
-  moveAngle(angle: number) {
-    this.body.velocity.x = this.velo * Math.cos((angle * Math.PI) / 180);
-    this.body.velocity.y = this.velo * Math.sin((angle * Math.PI) / 180);
-  }
-
-  shoot(angle: number, xOffset = 0, yOffset = 0) {
-    // 'bullet' argument is only there bc Bullet constructor has 4 parameters. SpaceshipLaser and UFOLaser each have 3 parameters.
-    // However, this.bulletType should never be Bullet, it should always be SpaceshipLaser or UFOLaser.
-    const laser = new this.bulletType(
-      this.scene,
-      this.x - xOffset,
-      this.y - yOffset,
-      "bullet"
-    );
-    laser.setVelocityX(200 * Math.cos((angle / 360) * 2 * Math.PI));
-    laser.setVelocityY(200 * Math.sin((angle / 360) * 2 * Math.PI));
-  }
-}
-
-// child class for spaceship vehicle
-class Spaceship extends Vehicle {
-  alive: boolean = true;
-
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    // When we determine the file name of the sprite for spaceship we need
-    // to replace 'Spaceship' with the file name
-    super(scene, x, y, image("spaceship"), spaceshipVelocity, SpaceshipLaser);
-    scene.add.existing(this);
-    scene.physics.add.existing(this);
-    this.setScale(0.8, 0.8);
-    this.setBounce(0.3);
-    this.setCollideWorldBounds(true);
-    this.type = "spaceship";
-  }
-}
-
-// child class for UFO vehicle
-class UFO extends Vehicle {
-  alive: boolean = true;
-
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    // When we determine the file name of the sprite for spaceship we need
-    // to replace 'Spaceship' with the file name
-    super(scene, x, y, image("ufo"), ufoVelocity, UFOLaser);
-    scene.add.existing(this);
-    scene.physics.add.existing(this);
-    this.setScale(0.8, 0.8);
-    this.setBounce(0.3);
-    this.setCollideWorldBounds(true);
-    this.type = "ufo"
-  }
-}
-
-// class for asteroids
-class Asteroid extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    // When we determine the file name of the sprite for spaceship we need
-    // to replace 'Spaceship' with the file name
-    super(scene, x, y, image("asteroid"));
-    scene.add.existing(this);
-    scene.physics.add.existing(this);
-    this.setScale(0.8, 0.8);
-    this.setBounce(0.3);
-    this.setCollideWorldBounds(true);
-    this.setImmovable(true);
-  }
-}
-
-//array for black holes
-const blackHoles: BlackHole[] = [];
-
-// black hole class
-// experimental feature
-class BlackHole extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, image("blackhole"));
-    scene.add.existing(this);
-    blackHoles.push(this);
-    scene.physics.add.existing(this);
-  }
-}
 
 // Define the game
 var game = new Phaser.Game(config);
 
 // asset locations
-const images = {
+export const images = {
   spaceship: "assets/Space Ship 3 Hearts.png",
   spaceship2hearts: "assets/Space Ship 2 Hearts.png",
   spaceship1hearts: "assets/Space Shop 1 Hearts.png",
@@ -278,7 +120,7 @@ const images = {
 } as const;
 
 // compile time image name checking
-function image(name: keyof typeof images) {
+export function image(name: keyof typeof images) {
   return name;
 }
 
@@ -356,11 +198,11 @@ function create(this: Phaser.Scene) {
   //   spaceship.moveAngle(-parseInt(moveInput.value));
   // });
 
-  smartCollider(this, bullets, asteroids, (bullet, astroid) => {
+  smartCollider(this, Consts.bullets, asteroids, (bullet, astroid) => {
     safeRemove(bullet, bulletsToRemove);
     safeRemove(astroid, asteroidsToRemove);
   });
-  smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
+  smartOverlap(this, Consts.bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
       if (spaceship.health == 2) {
@@ -392,7 +234,7 @@ function create(this: Phaser.Scene) {
       bulletsToRemove.push(bullet);
     }
   });
-  smartOverlap(this, bullets, ufo, (bullet, ufo) => {
+  smartOverlap(this, Consts.bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
       if (ufo.health == 2) {
@@ -492,13 +334,13 @@ function update(this: Phaser.Scene) {
   ufo.body.velocity.x *= decelerationFactor;
   ufo.body.velocity.y *= decelerationFactor;
 
-  bulletsToRemove.forEach((b) => bullets.splice(bullets.indexOf(b), 1));
+  bulletsToRemove.forEach((b) => Consts.bullets.splice(Consts.bullets.indexOf(b), 1));
   asteroidsToRemove.forEach((a) => asteroids.splice(asteroids.indexOf(a), 1));
 
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
-  bullets.forEach((bullet) => {
+  Consts.bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
       bullet.body.position.x > this.renderer.width + bullet.body.width ||
@@ -507,7 +349,7 @@ function update(this: Phaser.Scene) {
     ) {
       safeRemove(bullet, bulletsToRemove);
     }
-    blackHoles.forEach((hole) => {
+    Consts.blackHoles.forEach((hole) => {
       const holePos = hole.body.position
         .clone()
         .add(new Phaser.Math.Vector2(hole.width / 2, hole.height / 2));
