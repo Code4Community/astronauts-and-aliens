@@ -1,6 +1,11 @@
 import "./style.css";
 import { Vehicle, Spaceship, UFO, Bullet, SpaceshipLaser, UFOLaser, Asteroid, BlackHole } from './objects';
-import * as Consts from './consts'
+import { screenWidth, screenHeight, spaceshipSpawnY, 
+  spaceshipSpawnX, spaceshipVelocity, ufoSpawnY,
+  ufoSpawnX, ufoVelocity, asteroidSpawnXMin,
+  asteroidSpawnXMax, asteroidSpawnYMin, asteroidSpawnYMax,
+  asteroidCount, asteroidHeight, bullets, blackHoles, images } from './consts'
+import { getRandomInt, getRandomDouble, endGame } from './utils'
 import * as Phaser from "phaser";
 // @ts-ignore
 import C4C from "c4c-lib";
@@ -53,29 +58,6 @@ const actionQueue: typeof interpreterFunctions[keyof typeof interpreterFunctions
 
 console.log(editor);
 
-// screen size and camera
-const screenWidth = 1000;
-const screenHeight = 600;
-
-// spaceship parameters
-const spaceshipSpawnY = screenHeight / 2;
-const spaceshipSpawnX = screenWidth / 2 - screenWidth / 2.5;
-const spaceshipVelocity = 1400;
-
-//ufo parameters
-const ufoSpawnY = screenHeight / 2;
-const ufoSpawnX = screenWidth / 2 + screenWidth / 2.5;
-const ufoVelocity = 1400;
-
-// asteroid spawn parameters
-const asteroidSpawnXMin = screenWidth / 2 - screenWidth / 4;
-const asteroidSpawnXMax = screenWidth / 2 + screenWidth / 4;
-
-const asteroidSpawnYMin = 50;
-const asteroidSpawnYMax = screenHeight - 50;
-
-const asteroidCount = 8;
-const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
 let asteroidSpawnChance = 90; //percent chance to spawn asteroid
 
 let GameOver: boolean = false;
@@ -103,21 +85,6 @@ let bulletsToRemove: Bullet[] = [];
 
 // Define the game
 var game = new Phaser.Game(config);
-
-// asset locations
-export const images = {
-  spaceship: "assets/Space Ship 3 Hearts.png",
-  spaceship2hearts: "assets/Space Ship 2 Hearts.png",
-  spaceship1hearts: "assets/Space Shop 1 Hearts.png",
-  ufo: "assets/UFO 3 Hearts.png",
-  ufo2hearts: "assets/UFO 2 Hearts.png",
-  ufo3hearts: "assets/UFO 2 Hearts.png",
-  asteroid: "assets/Small Asteroid.png",
-  bullet: "assets/bullet.png",
-  blackhole: "assets/blackhole.png",
-  lazerSpaceship: "assets/LAZER SPACE SHIP.png",
-  lazerUFO: "assets/LAZER UFO.png",
-} as const;
 
 // compile time image name checking
 export function image(name: keyof typeof images) {
@@ -198,11 +165,11 @@ function create(this: Phaser.Scene) {
   //   spaceship.moveAngle(-parseInt(moveInput.value));
   // });
 
-  smartCollider(this, Consts.bullets, asteroids, (bullet, astroid) => {
+  smartCollider(this, bullets, asteroids, (bullet, astroid) => {
     safeRemove(bullet, bulletsToRemove);
     safeRemove(astroid, asteroidsToRemove);
   });
-  smartOverlap(this, Consts.bullets, spaceship, (bullet, spaceship) => {
+  smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
       if (spaceship.health == 2) {
@@ -234,7 +201,7 @@ function create(this: Phaser.Scene) {
       bulletsToRemove.push(bullet);
     }
   });
-  smartOverlap(this, Consts.bullets, ufo, (bullet, ufo) => {
+  smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
       if (ufo.health == 2) {
@@ -334,13 +301,13 @@ function update(this: Phaser.Scene) {
   ufo.body.velocity.x *= decelerationFactor;
   ufo.body.velocity.y *= decelerationFactor;
 
-  bulletsToRemove.forEach((b) => Consts.bullets.splice(Consts.bullets.indexOf(b), 1));
+  bulletsToRemove.forEach((b) => bullets.splice(bullets.indexOf(b), 1));
   asteroidsToRemove.forEach((a) => asteroids.splice(asteroids.indexOf(a), 1));
 
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
-  Consts.bullets.forEach((bullet) => {
+  bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
       bullet.body.position.x > this.renderer.width + bullet.body.width ||
@@ -349,7 +316,7 @@ function update(this: Phaser.Scene) {
     ) {
       safeRemove(bullet, bulletsToRemove);
     }
-    Consts.blackHoles.forEach((hole) => {
+    blackHoles.forEach((hole) => {
       const holePos = hole.body.position
         .clone()
         .add(new Phaser.Math.Vector2(hole.width / 2, hole.height / 2));
@@ -362,30 +329,6 @@ function update(this: Phaser.Scene) {
     star.x -= star.radius * 0.2;
     if (star.x < 0) star.x += this.renderer.width;
   });
-}
-
-function getRandomInt(min: number, max: number): number {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min);
-}
-
-function getRandomDouble(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
-}
-
-function endGame(scene: Phaser.Scene, vehicle: Vehicle) {
-    game.scene.pause("default");
-    // bullets.forEach(function (bullet) {
-    //     bullet.destroy();
-    // });
-    // Display words "GAME OVER"
-    console.log("GAME OVER!");
-    scene.add.text(screenWidth/2, screenHeight/2, 'GAME OVER', { fontSize: '75px' }).setOrigin(0.5);
-    let textMessage: [string, string]
-    textMessage = (vehicle.type == "spaceship") ? ['BUMMER! YOU LOST!', 'red']: ['CONGRATULATIONS! YOU WIN!', 'green'];
-    scene.add.text(screenWidth/2, screenHeight/2 + 100, textMessage[0], { fontSize: '50px', color: textMessage[1] }).setOrigin(0.5);
-    return;
 }
 
 

@@ -1,7 +1,10 @@
 import * as Phaser from "phaser";
 import { image } from "./main"
-import { images } from "./main"
-import * as Consts from './consts'
+import { screenWidth, screenHeight, spaceshipSpawnY, 
+  spaceshipSpawnX, spaceshipVelocity, ufoSpawnY,
+  ufoSpawnX, ufoVelocity, asteroidSpawnXMin,
+  asteroidSpawnXMax, asteroidSpawnYMin, asteroidSpawnYMax,
+  asteroidCount, asteroidHeight, bullets, blackHoles, images } from './consts'
 
 // parent class for ufo/spaceship
 export class Vehicle extends Phaser.Physics.Arcade.Sprite {
@@ -75,7 +78,7 @@ export class Vehicle extends Phaser.Physics.Arcade.Sprite {
     constructor(scene: Phaser.Scene, x: number, y: number) {
       // When we determine the file name of the sprite for spaceship we need
       // to replace 'Spaceship' with the file name
-      super(scene, x, y, image("spaceship"), Consts.spaceshipVelocity, SpaceshipLaser);
+      super(scene, x, y, image("spaceship"), spaceshipVelocity, SpaceshipLaser);
       scene.add.existing(this);
       scene.physics.add.existing(this);
       this.setScale(0.8, 0.8);
@@ -92,7 +95,7 @@ export class Vehicle extends Phaser.Physics.Arcade.Sprite {
     constructor(scene: Phaser.Scene, x: number, y: number) {
       // When we determine the file name of the sprite for spaceship we need
       // to replace 'Spaceship' with the file name
-      super(scene, x, y, image("ufo"), Consts.ufoVelocity, UFOLaser);
+      super(scene, x, y, image("ufo"), ufoVelocity, UFOLaser);
       scene.add.existing(this);
       scene.physics.add.existing(this);
       this.setScale(0.8, 0.8);
@@ -114,7 +117,7 @@ export class Bullet extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     this.setScale(0.3);
     scene.physics.add.existing(this);
-    Consts.bullets.push(this);
+    bullets.push(this);
   }
 }
 
@@ -153,7 +156,7 @@ export class BlackHole extends Phaser.Physics.Arcade.Sprite {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, image("blackhole"));
     scene.add.existing(this);
-    Consts.blackHoles.push(this);
+    blackHoles.push(this);
     scene.physics.add.existing(this);
   }
 }
