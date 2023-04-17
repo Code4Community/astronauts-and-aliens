@@ -87,6 +87,10 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
   velo: number;
   bulletType: typeof Bullet;
   health: number;
+  initX: number;
+  initY: number;
+  initPicture: keyof typeof images;
+  initVelo: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -108,7 +112,25 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.velo = velo;
     this.bulletType = bulletType;
     this.health = 3;
+
+    this.initX = x;
+    this.initY = y; 
+    this.initPicture = picture;
+    this.initVelo = velo;
+
   }
+
+  resetVehicle() {
+    this.health = 3;
+  ;
+    
+    this.alive = true;
+    this.enableBody(true,this.initX,this.initY,true,true)
+    this.setVisible(true);
+    this.velo = this.initVelo;
+
+
+}
 
   moveUp() {
     this.body.velocity.y = -this.velo;
@@ -570,7 +592,50 @@ function update(this: Phaser.Scene) {
   asteroidsToRemove = [];
 
   if (GameOver == true) {
-    game.destroy(true);
+    /*
+    * This is the place to implement ability to play a new game
+    */
+    //game.destroy(true);
+    const resetButton = document.querySelector("#restart") as HTMLButtonElement;
+      resetButton.addEventListener("click", () => {
+          //Delete All Asteroids, Stars, and Black Holes 
+          GameOver=false;
+          //Delete ASTEROIDS
+          for(let i = 0; i<asteroidCount; i++){
+            try {
+              asteroids[i].disableBody(true,true);
+            }
+            catch(err) {
+              //Catching Error that body is already disabled
+              //Do Nothing Here
+            }
+            
+          }
+          asteroids.splice(0,asteroids.length)
+          asteroidsToRemove = [];
+          asteroidSpawnChance = 90;
+          for (let i = 0; i < asteroidCount; i++) {
+            // if an asteroid is chosen to be spawned
+            asteroids[i] ;
+            if (getRandomInt(0, 99) < asteroidSpawnChance) {
+              asteroidSpawnChance -= 10;
+              // create asteroid and add colliders
+              asteroids[i] = new Asteroid(
+                this,
+                getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
+                asteroidSpawnYMin + i * asteroidHeight
+              );
+            } else {
+              asteroidSpawnChance += 10;
+            }
+          }
+          //Re-Enable UFO and Asteroid
+          
+
+          ufo.resetVehicle();
+          spaceship.resetVehicle();
+
+      })
   }
 
   bullets.forEach((bullet) => {
