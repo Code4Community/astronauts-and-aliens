@@ -165,21 +165,17 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.health = 3;
 
     this.initX = x;
-    this.initY = y; 
+    this.initY = y;
     this.initPicture = picture;
     this.initVelo = velo;
-
   }
 
   resetVehicle() {
-      this.health = 3;
-    ;
-      
-      this.alive = true;
-      this.enableBody(true,this.initX,this.initY,true,true)
-      this.setVisible(true);
-      this.velo = this.initVelo;
-
+    this.health = 3;
+    this.alive = true;
+    this.enableBody(true, this.initX, this.initY, true, true);
+    this.setVisible(true);
+    this.velo = this.initVelo;
 
     this.type;
   }
@@ -249,7 +245,7 @@ class UFO extends Vehicle {
     this.setScale(0.8, 0.8);
     this.setBounce(0.3);
     this.setCollideWorldBounds(true);
-    this.type = "ufo"
+    this.type = "ufo";
   }
 }
 
@@ -266,7 +262,6 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
     this.setCollideWorldBounds(true);
     this.setImmovable(true);
   }
-
 }
 
 //array for black holes
@@ -387,14 +382,36 @@ function create(this: Phaser.Scene) {
   smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
-      if (spaceship.health == 2) {
-      } /*
-      if(spaceship.health == 1){
-        
+      if (ufo.health == 2) {
+        this.anims.create({
+          key: "UFO2",
+          frames: this.anims.generateFrameNumbers("UFO2", { start: 0, end: 6 }),
+          frameRate: 20,
+          repeat: 0,
+        });
       }
-      if(spaceship.health == 0){
-
-      }*/
+      if (spaceship.health == 2) {
+        this.anims.create({
+          key: "SpaceS2",
+          frames: this.anims.generateFrameNumbers("SpaceS2", {
+            start: 0,
+            end: 0,
+          }),
+          frameRate: 20,
+          repeat: 0,
+        });
+      }
+      if (spaceship.health == 1) {
+        this.anims.create({
+          key: "SpaceS1",
+          frames: this.anims.generateFrameNumbers("SpaceS1", {
+            start: 0,
+            end: 0,
+          }),
+          frameRate: 20,
+          repeat: 0,
+        });
+      }
       if (spaceship.health == 0) {
         this.anims.create({
           key: "SUEXPLODE",
@@ -418,8 +435,20 @@ function create(this: Phaser.Scene) {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
       if (ufo.health == 2) {
+        this.anims.create({
+          key: "UFO2",
+          frames: this.anims.generateFrameNumbers("UFO2", { start: 0, end: 6 }),
+          frameRate: 20,
+          repeat: 0,
+        });
       }
       if (ufo.health == 1) {
+        this.anims.create({
+          key: "UFO1",
+          frames: this.anims.generateFrameNumbers("UFO1", { start: 0, end: 0 }),
+          frameRate: 20,
+          repeat: 0,
+        });
       }
       if (ufo.health == 0) {
         ufo.disableBody(true, true);
@@ -521,70 +550,63 @@ function update(this: Phaser.Scene) {
 
   if (GameOver == true) {
     /*
-    * This is the place to implement ability to play a new game
-    */
+     * This is the place to implement ability to play a new game
+     */
     //game.destroy(true);
     const resetButton = document.querySelector("#restart") as HTMLButtonElement;
-      resetButton.addEventListener("click", () => {
-          //Delete All Asteroids, Stars, and Black Holes 
-          GameOver=false;
-          //TODO 
-          //Re-spawn Asteroids, Stars, and Black Holes
-          //RESPAWN STARS
-          // for (let i = 0; i < 100; i++){
-          //   stars.push(
-          //   this.add.circle(
-          //     getRandomInt(0, this.renderer.width),
-          //     getRandomInt(0, this.renderer.height),
-          //     getRandomDouble(0.5, 3),
-          //     0xffffff
-          //     )
-          //   );
-          // }
-          //Delete ASTEROIDS
-          for(let i = 0; i<asteroidCount; i++){
-            try {
-              asteroids[i].disableBody(true,true);
-            }
-            catch(err) {
-              //Catching Error that body is already disabled
-              //Do Nothing Here
-            }
-            
-          }
-          asteroids.splice(0,asteroids.length)
-          asteroidsToRemove = [];
-          asteroidSpawnChance = 90;
-          for (let i = 0; i < asteroidCount; i++) {
-            // if an asteroid is chosen to be spawned
-            asteroids[i] ;
-            if (getRandomInt(0, 99) < asteroidSpawnChance) {
-              asteroidSpawnChance -= 10;
-              // create asteroid and add colliders
-              asteroids[i] = new Asteroid(
-                this,
-                getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
-                asteroidSpawnYMin + i * asteroidHeight
-              );
-            } else {
-              asteroidSpawnChance += 10;
-            }
-          }
-          
+    resetButton.addEventListener("click", () => {
+      //Delete All Asteroids, Stars, and Black Holes
+      GameOver = false;
+      //TODO
+      //Re-spawn Asteroids, Stars, and Black Holes
+      //RESPAWN STARS
+      // for (let i = 0; i < 100; i++){
+      //   stars.push(
+      //   this.add.circle(
+      //     getRandomInt(0, this.renderer.width),
+      //     getRandomInt(0, this.renderer.height),
+      //     getRandomDouble(0.5, 3),
+      //     0xffffff
+      //     )
+      //   );
+      // }
+      //Delete ASTEROIDS
+      for (let i = 0; i < asteroidCount; i++) {
+        try {
+          asteroids[i].disableBody(true, true);
+        } catch (err) {
+          //Catching Error that body is already disabled
+          //Do Nothing Here
+        }
+      }
+      asteroids.splice(0, asteroids.length);
+      asteroidsToRemove = [];
+      asteroidSpawnChance = 90;
+      for (let i = 0; i < asteroidCount; i++) {
+        // if an asteroid is chosen to be spawned
+        asteroids[i];
+        if (getRandomInt(0, 99) < asteroidSpawnChance) {
+          asteroidSpawnChance -= 10;
+          // create asteroid and add colliders
+          asteroids[i] = new Asteroid(
+            this,
+            getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
+            asteroidSpawnYMin + i * asteroidHeight
+          );
+        } else {
+          asteroidSpawnChance += 10;
+        }
+      }
 
-          //figure out how to do black holes -- Not Needed for now
-          
+      //figure out how to do black holes -- Not Needed for now
 
+      //Re-Enable UFO and Asteroid
 
-          //Re-Enable UFO and Asteroid
-          
-
-          ufo.resetVehicle();
-          spaceship.resetVehicle();
-
-      })
+      ufo.resetVehicle();
+      spaceship.resetVehicle();
+    });
   }
-  
+
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
@@ -620,19 +642,28 @@ function getRandomDouble(min: number, max: number): number {
 }
 
 function endGame(scene: Phaser.Scene, vehicle: Vehicle) {
-    game.scene.pause("default");
-    // bullets.forEach(function (bullet) {
-    //     bullet.destroy();
-    // });
-    // Display words "GAME OVER"
-    console.log("GAME OVER!");
-    scene.add.text(screenWidth/2, screenHeight/2, 'GAME OVER', { fontSize: '75px' }).setOrigin(0.5);
-    let textMessage: [string, string]
-    textMessage = (vehicle.type == "spaceship") ? ['BUMMER! YOU LOST!', 'red']: ['CONGRATULATIONS! YOU WIN!', 'green'];
-    scene.add.text(screenWidth/2, screenHeight/2 + 100, textMessage[0], { fontSize: '50px', color: textMessage[1] }).setOrigin(0.5);
-    return;
+  game.scene.pause("default");
+  // bullets.forEach(function (bullet) {
+  //     bullet.destroy();
+  // });
+  // Display words "GAME OVER"
+  console.log("GAME OVER!");
+  scene.add
+    .text(screenWidth / 2, screenHeight / 2, "GAME OVER", { fontSize: "75px" })
+    .setOrigin(0.5);
+  let textMessage: [string, string];
+  textMessage =
+    vehicle.type == "spaceship"
+      ? ["BUMMER! YOU LOST!", "red"]
+      : ["CONGRATULATIONS! YOU WIN!", "green"];
+  scene.add
+    .text(screenWidth / 2, screenHeight / 2 + 100, textMessage[0], {
+      fontSize: "50px",
+      color: textMessage[1],
+    })
+    .setOrigin(0.5);
+  return;
 }
-
 
 // todo: convert to new interpreter actions
 // function ufoTurn() {
@@ -656,9 +687,3 @@ function endGame(scene: Phaser.Scene, vehicle: Vehicle) {
   end
 end
 */
-
-const endGame = (state: GameState) => {
-  gameState = state;
-  document.querySelector(".status")!.innerHTML =
-    state === "SPACESHIP_WIN" ? "YOU WIN!" : "YOU LOSE!";
-};
