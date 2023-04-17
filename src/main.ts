@@ -514,19 +514,6 @@ function update(this: Phaser.Scene) {
       resetButton.addEventListener("click", () => {
           //Delete All Asteroids, Stars, and Black Holes 
           GameOver=false;
-          //TODO 
-          //Re-spawn Asteroids, Stars, and Black Holes
-          //RESPAWN STARS
-          // for (let i = 0; i < 100; i++){
-          //   stars.push(
-          //   this.add.circle(
-          //     getRandomInt(0, this.renderer.width),
-          //     getRandomInt(0, this.renderer.height),
-          //     getRandomDouble(0.5, 3),
-          //     0xffffff
-          //     )
-          //   );
-          // }
           //Delete ASTEROIDS
           for(let i = 0; i<asteroidCount; i++){
             try {
@@ -556,12 +543,6 @@ function update(this: Phaser.Scene) {
               asteroidSpawnChance += 10;
             }
           }
-          
-
-          //figure out how to do black holes -- Not Needed for now
-          
-
-
           //Re-Enable UFO and Asteroid
           
 
