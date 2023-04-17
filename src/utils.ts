@@ -3,8 +3,13 @@ import { screenWidth, screenHeight, spaceshipSpawnY,
     spaceshipSpawnX, spaceshipVelocity, ufoSpawnY,
     ufoSpawnX, ufoVelocity, asteroidSpawnXMin,
     asteroidSpawnXMax, asteroidSpawnYMin, asteroidSpawnYMax,
-    asteroidCount, asteroidHeight, bullets, blackHoles } from './consts'
+    asteroidCount, asteroidHeight, bullets, blackHoles, images } from './consts'
 // 1
+
+// compile time image name checking
+export function image(name: keyof typeof images) {
+    return name;
+  }
 
 export function getRandomInt(min: number, max: number): number {
     min = Math.ceil(min);

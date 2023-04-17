@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { image } from "./main"
+import { image } from "./utils"
 import { screenWidth, screenHeight, spaceshipSpawnY, 
   spaceshipSpawnX, spaceshipVelocity, ufoSpawnY,
   ufoSpawnX, ufoVelocity, asteroidSpawnXMin,

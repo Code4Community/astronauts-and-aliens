@@ -86,11 +86,6 @@ let bulletsToRemove: Bullet[] = [];
 // Define the game
 var game = new Phaser.Game(config);
 
-// compile time image name checking
-export function image(name: keyof typeof images) {
-  return name;
-}
-
 function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
