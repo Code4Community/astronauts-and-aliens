@@ -1,55 +1,5 @@
 import "./style.css";
 import * as Phaser from "phaser";
-// @ts-ignore
-import C4C from "c4c-lib";
-
-declare const C4C: {
-  Editor: {
-    create(b: HTMLElement): { dom: HTMLDivElement };
-    getText(): string;
-  };
-  Interpreter: {
-    define(name: string, f: () => void): void;
-    run(programCode: string): void;
-  };
-};
-
-type GameState = "PLAYING" | "UFO_WIN" | "SPACESHIP_WIN";
-
-let gameState: GameState = "PLAYING";
-
-const editor = C4C.Editor.create(document.querySelector(".code")!);
-
-editor.dom.style.height = "200px";
-
-const interpreterFunctions: Record<string, () => void> = {
-  shoot() {
-    spaceship.shoot(0, 0, 0);
-  },
-  up() {
-    spaceship.moveUp();
-  },
-  down() {
-    spaceship.moveDown();
-  },
-  left() {
-    spaceship.moveLeft();
-  },
-  right() {
-    spaceship.moveRight();
-  },
-};
-
-const actionQueue: typeof interpreterFunctions[keyof typeof interpreterFunctions][] =
-  [];
-
-(
-  Object.keys(interpreterFunctions) as (keyof typeof interpreterFunctions)[]
-).forEach((key) => {
-  C4C.Interpreter.define(key, () =>
-    actionQueue.push(interpreterFunctions[key])
-  );
-});
 
 // screen size and camera
 const screenWidth = 1000;
@@ -73,7 +23,6 @@ const asteroidSpawnYMin = 50;
 const asteroidSpawnYMax = screenHeight - 50;
 
 const asteroidCount = 8;
-
 const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroidCount;
 let asteroidSpawnChance = 90; //percent chance to spawn asteroid
 
@@ -138,10 +87,6 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
   velo: number;
   bulletType: typeof Bullet;
   health: number;
-  initX: number;
-  initY: number;
-  initPicture: keyof typeof images;
-  initVelo: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -163,25 +108,6 @@ class Vehicle extends Phaser.Physics.Arcade.Sprite {
     this.velo = velo;
     this.bulletType = bulletType;
     this.health = 3;
-
-    this.initX = x;
-    this.initY = y; 
-    this.initPicture = picture;
-    this.initVelo = velo;
-
-  }
-
-  resetVehicle() {
-      this.health = 3;
-    ;
-      
-      this.alive = true;
-      this.enableBody(true,this.initX,this.initY,true,true)
-      this.setVisible(true);
-      this.velo = this.initVelo;
-
-
-    this.type;
   }
 
   moveUp() {
@@ -232,7 +158,6 @@ class Spaceship extends Vehicle {
     this.setScale(0.8, 0.8);
     this.setBounce(0.3);
     this.setCollideWorldBounds(true);
-    this.type = "spaceship";
   }
 }
 
@@ -249,7 +174,6 @@ class UFO extends Vehicle {
     this.setScale(0.8, 0.8);
     this.setBounce(0.3);
     this.setCollideWorldBounds(true);
-    this.type = "ufo"
   }
 }
 
@@ -266,7 +190,6 @@ class Asteroid extends Phaser.Physics.Arcade.Sprite {
     this.setCollideWorldBounds(true);
     this.setImmovable(true);
   }
-
 }
 
 //array for black holes
@@ -284,7 +207,7 @@ class BlackHole extends Phaser.Physics.Arcade.Sprite {
 }
 
 // Define the game
-const game = new Phaser.Game(config);
+var game = new Phaser.Game(config);
 
 // asset locations
 const images = {
@@ -309,22 +232,12 @@ function image(name: keyof typeof images) {
 function preload(this: Phaser.Scene) {
   for (const name in images) {
     this.load.image(name, images[name as keyof typeof images]);
-    this.load.spritesheet("SpaceS2", "assets/Space Ship 2 Hearts.png", {
-      frameWidth: 250,
-      frameHeight: 250,
-    });
-    this.load.spritesheet("UFO2", "assets/UFO 2 Hearts.png", {
-      frameWidth: 250,
-      frameHeight: 250,
-    });
-    this.load.spritesheet("SUEXPLODE", "assets/Exploding object.png", {
-      frameWidth: 250,
-      frameHeight: 250,
-    });
-    this.load.spritesheet("AEXPLODE", "assets/ASTEROID BREAK.png", {
-      frameWidth: 200,
-      frameHeight: 200,
-    });
+    this.load.spritesheet('SpaceS2', 'assets/Space Ship 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('SpaceS1', 'assets/Space Ship 1 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('UFO1', 'assets/UFO 1 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('UFO2', 'assets/UFO 2 Hearts.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('SUEXPLODE', 'assets/Exploding object.png', { frameWidth: 250, frameHeight: 250 });
+    this.load.spritesheet('AEXPLODE', 'assets/ASTEROID BREAK.png', { frameWidth: 200, frameHeight: 200 });
   }
 }
 
@@ -335,10 +248,47 @@ let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
 
-let scene: Phaser.Scene;
+const code = document.querySelector("#code") as HTMLTextAreaElement;
+
+const allActions = {
+  up(v: Vehicle) {
+    v.moveUp();
+  },
+  down(v: Vehicle) {
+    v.moveDown();
+  },
+  left(v: Vehicle) {
+    v.moveLeft();
+  },
+  right(v: Vehicle) {
+    v.moveRight();
+  },
+  shoot(v: Vehicle) {
+    v.shoot(getRandomInt(0, 360));
+  },
+} satisfies Record<string, (v: Vehicle) => void>;
+
+// the list of actions as a static union
+type Action = keyof typeof allActions;
+
+const randomAction = (): Action => {
+  return (Object.keys(allActions) as Action[])[
+    getRandomInt(0, Object.keys(allActions).length)
+  ];
+};
+
+const runActions = (actions: Action[], vehicle: Vehicle) => {
+  const interval = setInterval(() => {
+    if (actions.length === 0) {
+      clearInterval(interval);
+    } else {
+      allActions[actions[0]](vehicle);
+      actions.splice(0, 1);
+    }
+  }, 100);
+};
 
 function create(this: Phaser.Scene) {
-  scene = this;
   for (let i = 0; i < 100; i++)
     stars.push(
       this.add.circle(
@@ -351,6 +301,23 @@ function create(this: Phaser.Scene) {
 
   spaceship = new Spaceship(this, spaceshipSpawnX, spaceshipSpawnY);
   ufo = new UFO(this, ufoSpawnX, ufoSpawnY);
+
+  document.addEventListener("keydown", (event) => {
+    if (document.activeElement == code) return;
+    let cancel = true;
+    if (event.key === "w") spaceship.moveUp();
+    else if (event.key === "a") spaceship.moveLeft();
+    else if (event.key === "s") spaceship.moveDown();
+    else if (event.key === "d") spaceship.moveRight();
+    else if (event.key === "q") spaceship.shoot(0, -102, 6);
+    else if (event.key === "ArrowUp") ufo.moveUp();
+    else if (event.key === "ArrowLeft") ufo.moveLeft();
+    else if (event.key === "ArrowDown") ufo.moveDown();
+    else if (event.key === "ArrowRight") ufo.moveRight();
+    else if (event.key === "p") ufo.shoot(180, 88, 27);
+    else cancel = false;
+    if (cancel) event.preventDefault();
+  });
 
   for (let i = 0; i < asteroidCount; i++) {
     // if an asteroid is chosen to be spawned
@@ -371,63 +338,87 @@ function create(this: Phaser.Scene) {
   this.physics.add.collider(ufo, asteroids);
   this.physics.add.collider(spaceship, ufo);
 
-  // const moveInput = document.querySelector("#angleMove") as HTMLInputElement;
-  // const moveButton = document.querySelector("#move") as HTMLButtonElement;
+  const moveInput = document.querySelector("#angleMove") as HTMLInputElement;
+  const moveButton = document.querySelector("#move") as HTMLButtonElement;
 
-  // moveButton.addEventListener("click", () => {
-  //   // move at x degrees,
-  //   // offset bullet position so it appears to emerge from sprite's gun
-  //   spaceship.moveAngle(-parseInt(moveInput.value));
-  // });
+  moveButton.addEventListener("click", () => {
+    // move at x degrees,
+    // offset bullet position so it appears to emerge from sprite's gun
+    spaceship.moveAngle(-parseInt(moveInput.value));
+  });
 
   smartCollider(this, bullets, asteroids, (bullet, astroid) => {
     safeRemove(bullet, bulletsToRemove);
     safeRemove(astroid, asteroidsToRemove);
   });
-  smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
+  smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
-      if (spaceship.health == 2) {
-      } /*
-      if(spaceship.health == 1){
-        
+      if(spaceship.health == 2){
+        this.anims.create({
+          key:'SpaceS2',
+          frames: this.anims.generateFrameNumbers('SpaceS2', { start: 0, end: 0 }),
+          frameRate: 20,
+          repeat: 0,
+        });
+  
       }
+      if(spaceship.health == 1){
+        this.anims.create({
+          key:'SpaceS1',
+          frames: this.anims.generateFrameNumbers('SpaceS1', { start: 0, end: 0 }),
+          frameRate: 20,
+          repeat: 0,
+        });
+      }/*
       if(spaceship.health == 0){
 
       }*/
       if (spaceship.health == 0) {
         this.anims.create({
-          key: "SUEXPLODE",
-          frames: this.anims.generateFrameNumbers("SUEXPLODE", {
-            start: 0,
-            end: 8,
-          }),
+          key:'SUEXPLODE',
+          frames: this.anims.generateFrameNumbers('SUEXPLODE', { start: 0, end: 8 }),
           frameRate: 20,
           repeat: 0,
-          hideOnComplete: true,
+          hideOnComplete:true
         });
-        spaceship.play("SUEXPLODE");
+        spaceship.play('SUEXPLODE');
         //spaceship.setVisible(false);
         spaceship.disableBody(true, true);
-        endGame(scene, spaceship);
+        GameOver = true;
       }
       safeRemove(bullet, bulletsToRemove);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
     }
   });
-  smartCollider(this, bullets, ufo, (bullet, ufo) => {
+  smartOverlap(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
-      if (ufo.health == 2) {
+      if(ufo.health == 2){
+        this.anims.create({
+          key:'UFO2',
+          frames: this.anims.generateFrameNumbers('UFO2', { start: 0, end: 6 }),
+          frameRate: 20,
+          repeat: 0,
+        });
       }
-      if (ufo.health == 1) {
+      if(ufo.health == 1){
+        this.anims.create({
+          key:'UFO1',
+          frames: this.anims.generateFrameNumbers('UFO1', { start: 0, end: 0 }),
+          frameRate: 20,
+          repeat: 0,
+        });
       }
       if (ufo.health == 0) {
         ufo.disableBody(true, true);
         var manCamera = this.cameras.main;
         manCamera.shake(250);
-        endGame(scene, ufo);
       }
       safeRemove(bullet, bulletsToRemove);
+      bullet.destroy();
+      bulletsToRemove.push(bullet);
     }
   });
 
@@ -454,7 +445,70 @@ function create(this: Phaser.Scene) {
 
   const runButton = document.querySelector("#run") as HTMLButtonElement;
   runButton.addEventListener("click", () => {
-    C4C.Interpreter.run(C4C.Editor.getText().replace(/forever/, "100000"));
+    const lines = code.value.split("\n") as Action[];
+
+    console.log(lines);
+
+    const parseLines = (lines: string[]): Action[] => {
+      let result: Action[] = [];
+      let inRepeat = false;
+      let numRepeatTimes: number = 0;
+      let repeatLines = [] as Action[];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.substring(0, 3) == "do ") {
+          inRepeat = true;
+          numRepeatTimes = parseInt(line.split(" ")[1]);
+          repeatLines = [];
+        } else if (line.substring(0, 3) == "end") {
+          inRepeat = false;
+          const subActions = parseLines(repeatLines);
+          result = [
+            ...result,
+            ...Array(numRepeatTimes)
+              .fill(0)
+              .flatMap(() => subActions),
+          ];
+        } else if (inRepeat) {
+          repeatLines.push(line as Action);
+        } else {
+          result = [...result, line as Action];
+        }
+        console.log(result);
+      }
+      return result;
+    };
+
+    // const actions = [...lines];
+
+    runActions(parseLines(lines), spaceship);
+  });
+
+  const randomButton = document.querySelector("#random") as HTMLButtonElement;
+  randomButton.addEventListener("click", () => {
+    // just for testing. set default depth to >0 when nested loops are working
+    const randomProgram = (depth: number = 1): string[] => {
+      let actions: string[] = [];
+      for (let i = 0; i < getRandomInt(5, 200); i++) {
+        if (Math.random() < 0.1 && depth > 0) {
+          actions = [
+            ...actions,
+            `do ${getRandomInt(1, 5)} times`,
+            ...randomProgram(depth - 1).map((it) => "    " + it),
+            `end`,
+          ];
+        } else {
+          actions.push(
+            Object.keys(allActions)[
+              getRandomInt(0, Object.keys(allActions).length)
+            ]
+          );
+        }
+      }
+      return actions;
+    };
+
+    code.value = randomProgram().join("\n");
   });
 }
 
@@ -487,25 +541,21 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
   toRemove.push(t);
 };
 
-let lastCodeAction = 0;
-
 function update(this: Phaser.Scene) {
-  if (gameState !== "PLAYING") return;
-  var x;
-  var y;
+  var x, y;
   if (game.input.mousePointer.isDown) {
-    x = game.input.mousePointer.x;
-    y = game.input.mousePointer.y;
-    const box = document.getElementById("XY") as HTMLDivElement;
-    box.innerHTML = "x" + Math.round(x) + "y" + Math.round(y);
-  }
+      x = game.input.mousePointer.x;
+      y = game.input.mousePointer.y;
+      const box = document.getElementById(
+        'XY',
+      ) as HTMLDivElement;
+      box.innerHTML = "x" + x + "y" + y
+      
 
-  if (Date.now() - lastCodeAction > 500 && actionQueue.length > 0) {
-    actionQueue[0]();
-    actionQueue.splice(0, 1);
-    lastCodeAction = Date.now();
-  }
 
+    
+  }
+  
   var decelerationFactor = 0.6;
 
   spaceship.body.velocity.x *= decelerationFactor;
@@ -520,71 +570,9 @@ function update(this: Phaser.Scene) {
   asteroidsToRemove = [];
 
   if (GameOver == true) {
-    /*
-    * This is the place to implement ability to play a new game
-    */
-    //game.destroy(true);
-    const resetButton = document.querySelector("#restart") as HTMLButtonElement;
-      resetButton.addEventListener("click", () => {
-          //Delete All Asteroids, Stars, and Black Holes 
-          GameOver=false;
-          //TODO 
-          //Re-spawn Asteroids, Stars, and Black Holes
-          //RESPAWN STARS
-          // for (let i = 0; i < 100; i++){
-          //   stars.push(
-          //   this.add.circle(
-          //     getRandomInt(0, this.renderer.width),
-          //     getRandomInt(0, this.renderer.height),
-          //     getRandomDouble(0.5, 3),
-          //     0xffffff
-          //     )
-          //   );
-          // }
-          //Delete ASTEROIDS
-          for(let i = 0; i<asteroidCount; i++){
-            try {
-              asteroids[i].disableBody(true,true);
-            }
-            catch(err) {
-              //Catching Error that body is already disabled
-              //Do Nothing Here
-            }
-            
-          }
-          asteroids.splice(0,asteroids.length)
-          asteroidsToRemove = [];
-          asteroidSpawnChance = 90;
-          for (let i = 0; i < asteroidCount; i++) {
-            // if an asteroid is chosen to be spawned
-            asteroids[i] ;
-            if (getRandomInt(0, 99) < asteroidSpawnChance) {
-              asteroidSpawnChance -= 10;
-              // create asteroid and add colliders
-              asteroids[i] = new Asteroid(
-                this,
-                getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
-                asteroidSpawnYMin + i * asteroidHeight
-              );
-            } else {
-              asteroidSpawnChance += 10;
-            }
-          }
-          
-
-          //figure out how to do black holes -- Not Needed for now
-          
-
-
-          //Re-Enable UFO and Asteroid
-          
-
-          ufo.resetVehicle();
-          spaceship.resetVehicle();
-
-      })
+    game.destroy(true);
   }
-  
+
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
@@ -619,46 +607,10 @@ function getRandomDouble(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
 
-function endGame(scene: Phaser.Scene, vehicle: Vehicle) {
-    game.scene.pause("default");
-    // bullets.forEach(function (bullet) {
-    //     bullet.destroy();
-    // });
-    // Display words "GAME OVER"
-    console.log("GAME OVER!");
-    scene.add.text(screenWidth/2, screenHeight/2, 'GAME OVER', { fontSize: '75px' }).setOrigin(0.5);
-    let textMessage: [string, string]
-    textMessage = (vehicle.type == "spaceship") ? ['BUMMER! YOU LOST!', 'red']: ['CONGRATULATIONS! YOU WIN!', 'green'];
-    scene.add.text(screenWidth/2, screenHeight/2 + 100, textMessage[0], { fontSize: '50px', color: textMessage[1] }).setOrigin(0.5);
-    return;
+function ufoTurn() {
+  const actions: Action[] = [];
+  for (let i = 0; i < 20; i++) {
+    actions.push(randomAction());
+  }
+  runActions(actions, ufo);
 }
-
-
-// todo: convert to new interpreter actions
-// function ufoTurn() {
-//   const actions: Action[] = [];
-//   for (let i = 0; i < 20; i++) {
-//     actions.push(randomAction());
-//   }
-//   runActions(actions, ufo);
-// }
-
-// testing code:
-/*
-10 times
-  25 times
-    down
-    shoot
-  end
-  25 times
-    up
-    shoot
-  end
-end
-*/
-
-const endGame = (state: GameState) => {
-  gameState = state;
-  document.querySelector(".status")!.innerHTML =
-    state === "SPACESHIP_WIN" ? "YOU WIN!" : "YOU LOSE!";
-};
