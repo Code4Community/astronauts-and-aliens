@@ -14,9 +14,11 @@ declare const C4C: {
   };
 };
 
-type GameState = "PLAYING" | "UFO_WIN" | "SPACESHIP_WIN";
+type GameState = "PLAYING" | "UFO_WIN" | "SPACESHIP_WIN" | "END_GAME" | "CLOSE_GAME";
 
 let gameState: GameState = "PLAYING";
+
+let pauseGameText = null;
 
 const editor = C4C.Editor.create(document.querySelector(".code")!);
 
@@ -486,6 +488,9 @@ function create(this: Phaser.Scene) {
   runButton.addEventListener("click", () => {
     C4C.Interpreter.run(C4C.Editor.getText().replace(/forever/, "100000"));
   });
+
+  const resetButton = document.querySelector("#restart") as HTMLButtonElement;
+  resetButton.addEventListener("click", () => {restartGame});
 }
 
 const smartCollider = <
@@ -550,12 +555,45 @@ function update(this: Phaser.Scene) {
   asteroidsToRemove = [];
 
   if (GameOver == true) {
-    /*
+  
+  }
+  
+  bullets.forEach((bullet) => {
+    if (
+      bullet.body.position.x < -bullet.body.width ||
+      bullet.body.position.x > this.renderer.width + bullet.body.width ||
+      bullet.body.position.y < -bullet.body.height ||
+      bullet.body.position.y > this.renderer.height + bullet.body.height
+    ) {
+      safeRemove(bullet, bulletsToRemove);
+    }
+    blackHoles.forEach((hole) => {
+      const holePos = hole.body.position
+        .clone()
+        .add(new Phaser.Math.Vector2(hole.width / 2, hole.height / 2));
+      const rHat = holePos.clone().subtract(bullet.body.position).normalize();
+      bullet.body.velocity.add(rHat);
+    });
+  });
+
+  stars.forEach((star) => {
+    star.x -= star.radius * 0.2;
+    if (star.x < 0) star.x += this.renderer.width;
+  });
+}
+
+function restartGame(){
+      if(gameState != "END_GAME"){
+        return;
+      }  
+      gameState = "PLAYING";
+      game.scene.resume("default");
+      pauseGameText.setVisible(false);
+  /*
     * This is the place to implement ability to play a new game
     */
     //game.destroy(true);
-    const resetButton = document.querySelector("#restart") as HTMLButtonElement;
-      resetButton.addEventListener("click", () => {
+    
           //Delete All Asteroids, Stars, and Black Holes 
           GameOver=false;
           //Delete ASTEROIDS
@@ -593,31 +631,6 @@ function update(this: Phaser.Scene) {
           ufo.resetVehicle();
           spaceship.resetVehicle();
 
-      })
-  }
-  
-  bullets.forEach((bullet) => {
-    if (
-      bullet.body.position.x < -bullet.body.width ||
-      bullet.body.position.x > this.renderer.width + bullet.body.width ||
-      bullet.body.position.y < -bullet.body.height ||
-      bullet.body.position.y > this.renderer.height + bullet.body.height
-    ) {
-      safeRemove(bullet, bulletsToRemove);
-    }
-    blackHoles.forEach((hole) => {
-      const holePos = hole.body.position
-        .clone()
-        .add(new Phaser.Math.Vector2(hole.width / 2, hole.height / 2));
-      const rHat = holePos.clone().subtract(bullet.body.position).normalize();
-      bullet.body.velocity.add(rHat);
-    });
-  });
-
-  stars.forEach((star) => {
-    star.x -= star.radius * 0.2;
-    if (star.x < 0) star.x += this.renderer.width;
-  });
 }
 
 function getRandomInt(min: number, max: number): number {
@@ -645,12 +658,13 @@ function endGame(scene: Phaser.Scene, vehicle: Vehicle) {
     vehicle.type == "spaceship"
       ? ["BUMMER! YOU LOST!", "red"]
       : ["CONGRATULATIONS! YOU WIN!", "green"];
-  scene.add
+  pauseGameText = scene.add
     .text(screenWidth / 2, screenHeight / 2 + 100, textMessage[0], {
       fontSize: "50px",
       color: textMessage[1],
     })
     .setOrigin(0.5);
+    gameState = "END_GAME";
   return;
 }
 // todo: convert to new interpreter actions
