@@ -551,61 +551,49 @@ function update(this: Phaser.Scene) {
 
   if (GameOver == true) {
     /*
-     * This is the place to implement ability to play a new game
-     */
+    * This is the place to implement ability to play a new game
+    */
     //game.destroy(true);
     const resetButton = document.querySelector("#restart") as HTMLButtonElement;
-    resetButton.addEventListener("click", () => {
-      //Delete All Asteroids, Stars, and Black Holes
-      GameOver = false;
-      //TODO
-      //Re-spawn Asteroids, Stars, and Black Holes
-      //RESPAWN STARS
-      // for (let i = 0; i < 100; i++){
-      //   stars.push(
-      //   this.add.circle(
-      //     getRandomInt(0, this.renderer.width),
-      //     getRandomInt(0, this.renderer.height),
-      //     getRandomDouble(0.5, 3),
-      //     0xffffff
-      //     )
-      //   );
-      // }
-      //Delete ASTEROIDS
-      for (let i = 0; i < asteroidCount; i++) {
-        try {
-          asteroids[i].disableBody(true, true);
-        } catch (err) {
-          //Catching Error that body is already disabled
-          //Do Nothing Here
-        }
-      }
-      asteroids.splice(0, asteroids.length);
-      asteroidsToRemove = [];
-      asteroidSpawnChance = 90;
-      for (let i = 0; i < asteroidCount; i++) {
-        // if an asteroid is chosen to be spawned
-        asteroids[i];
-        if (getRandomInt(0, 99) < asteroidSpawnChance) {
-          asteroidSpawnChance -= 10;
-          // create asteroid and add colliders
-          asteroids[i] = new Asteroid(
-            this,
-            getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
-            asteroidSpawnYMin + i * asteroidHeight
-          );
-        } else {
-          asteroidSpawnChance += 10;
-        }
-      }
+      resetButton.addEventListener("click", () => {
+          //Delete All Asteroids, Stars, and Black Holes 
+          GameOver=false;
+          //Delete ASTEROIDS
+          for(let i = 0; i<asteroidCount; i++){
+            try {
+              asteroids[i].disableBody(true,true);
+            }
+            catch(err) {
+              //Catching Error that body is already disabled
+              //Do Nothing Here
+            }
+            
+          }
+          asteroids.splice(0,asteroids.length)
+          asteroidsToRemove = [];
+          asteroidSpawnChance = 90;
+          for (let i = 0; i < asteroidCount; i++) {
+            // if an asteroid is chosen to be spawned
+            asteroids[i] ;
+            if (getRandomInt(0, 99) < asteroidSpawnChance) {
+              asteroidSpawnChance -= 10;
+              // create asteroid and add colliders
+              asteroids[i] = new Asteroid(
+                this,
+                getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
+                asteroidSpawnYMin + i * asteroidHeight
+              );
+            } else {
+              asteroidSpawnChance += 10;
+            }
+          }
+          //Re-Enable UFO and Asteroid
+          
 
-      //figure out how to do black holes -- Not Needed for now
+          ufo.resetVehicle();
+          spaceship.resetVehicle();
 
-      //Re-Enable UFO and Asteroid
-
-      ufo.resetVehicle();
-      spaceship.resetVehicle();
-    });
+      })
   }
   
   bullets.forEach((bullet) => {
