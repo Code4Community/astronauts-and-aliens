@@ -1,9 +1,5 @@
-import { Vehicle } from './objects'
-import { screenWidth, screenHeight, spaceshipSpawnY, 
-    spaceshipSpawnX, spaceshipVelocity, ufoSpawnY,
-    ufoSpawnX, ufoVelocity, asteroidSpawnXMin,
-    asteroidSpawnXMax, asteroidSpawnYMin, asteroidSpawnYMax,
-    asteroidCount, asteroidHeight, bullets, blackHoles, images } from './consts'
+import Vehicle from './objects/vehicle'
+import { screenWidth, screenHeight, images } from './consts'
 // 1
 
 // compile time image name checking

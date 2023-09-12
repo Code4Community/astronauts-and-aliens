@@ -11,11 +11,11 @@ import UFO from "./objects/ufo";
 import UFOLaser from "./objects/ufolaser";
 import Vehicle from "./objects/vehicle";
 import { screenWidth, screenHeight, spaceshipSpawnY, 
-  spaceshipSpawnX, spaceshipVelocity, ufoSpawnY,
-  ufoSpawnX, ufoVelocity, asteroidSpawnXMin,
+  spaceshipSpawnX, ufoSpawnY,
+  ufoSpawnX, asteroidSpawnXMin,
   asteroidSpawnXMax, asteroidSpawnYMin,
-  asteroidCount, asteroidHeight, bullets, blackHoles, images } from './consts'
-import { image, getRandomInt, getRandomDouble, endGame } from './utils'
+  asteroidCount, asteroidHeight, asteroids, bullets, blackHoles, images } from './consts'
+import { getRandomInt, getRandomDouble, endGame } from './utils'
 
 declare const C4C: {
   Editor: {
@@ -119,7 +119,6 @@ function preload(this: Phaser.Scene) {
 
 let spaceship: Spaceship;
 let ufo: UFO;
-const asteroids: Asteroid[] = [];
 let asteroidsToRemove: Asteroid[] = [];
 
 const stars: Phaser.GameObjects.Arc[] = [];
