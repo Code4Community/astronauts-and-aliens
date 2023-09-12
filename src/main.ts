@@ -1,14 +1,21 @@
 import "./style.css";
-import { Vehicle, Spaceship, UFO, Bullet, SpaceshipLaser, UFOLaser, Asteroid, BlackHole } from './objects';
-import { screenWidth, screenHeight, spaceshipSpawnY, 
-  spaceshipSpawnX, spaceshipVelocity, ufoSpawnY,
-  ufoSpawnX, ufoVelocity, asteroidSpawnXMin,
-  asteroidSpawnXMax, asteroidSpawnYMin, asteroidSpawnYMax,
-  asteroidCount, asteroidHeight, bullets, blackHoles, images } from './consts'
-import { getRandomInt, getRandomDouble, endGame } from './utils'
 import * as Phaser from "phaser";
 // @ts-ignore
 import C4C from "c4c-lib";
+import Asteroid from "./objects/asteroid";
+import BlackHole from "./objects/blackhole";
+import Bullet from "./objects/bullet";
+import Spaceship from "./objects/spaceship";
+import SpaceshipLaser from "./objects/spaceshiplaser";
+import UFO from "./objects/ufo";
+import UFOLaser from "./objects/ufolaser";
+import Vehicle from "./objects/vehicle";
+import { screenWidth, screenHeight, spaceshipSpawnY, 
+  spaceshipSpawnX, spaceshipVelocity, ufoSpawnY,
+  ufoSpawnX, ufoVelocity, asteroidSpawnXMin,
+  asteroidSpawnXMax, asteroidSpawnYMin,
+  asteroidCount, asteroidHeight, bullets, blackHoles, images } from './consts'
+import { image, getRandomInt, getRandomDouble, endGame } from './utils'
 
 declare const C4C: {
   Editor: {
@@ -21,7 +28,9 @@ declare const C4C: {
   };
 };
 
-console.log(C4C);
+type GameState = "PLAYING" | "UFO_WIN" | "SPACESHIP_WIN";
+
+let gameState: GameState = "PLAYING";
 
 const editor = C4C.Editor.create(document.querySelector(".code")!);
 
@@ -56,10 +65,6 @@ const actionQueue: typeof interpreterFunctions[keyof typeof interpreterFunctions
   );
 });
 
-console.log(editor);
-
-let asteroidSpawnChance = 90; //percent chance to spawn asteroid
-
 let GameOver: boolean = false;
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -81,10 +86,14 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 };
 
+// array of bullets, each fired bullet is appended here
 let bulletsToRemove: Bullet[] = [];
 
+let asteroidSpawnChance = 90; // percent chance to spawn asteroid
+
 // Define the game
-var game = new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
 
 function preload(this: Phaser.Scene) {
   for (const name in images) {
@@ -164,17 +173,39 @@ function create(this: Phaser.Scene) {
     safeRemove(bullet, bulletsToRemove);
     safeRemove(astroid, asteroidsToRemove);
   });
-  smartOverlap(this, bullets, spaceship, (bullet, spaceship) => {
+  smartCollider(this, bullets, spaceship, (bullet, spaceship) => {
     if (bullet instanceof UFOLaser) {
       spaceship.health--;
-      if (spaceship.health == 2) {
-      } /*
-      if(spaceship.health == 1){
-        
+      if (ufo.health == 2) {
+        this.anims.create({
+          key: "UFO2",
+          frames: this.anims.generateFrameNumbers("UFO2", { start: 0, end: 6 }),
+          frameRate: 20,
+          repeat: 0,
+        });
       }
-      if(spaceship.health == 0){
-
-      }*/
+      if (spaceship.health == 2) {
+        this.anims.create({
+          key: "SpaceS2",
+          frames: this.anims.generateFrameNumbers("SpaceS2", {
+            start: 0,
+            end: 0,
+          }),
+          frameRate: 20,
+          repeat: 0,
+        });
+      }
+      if (spaceship.health == 1) {
+        this.anims.create({
+          key: "SpaceS1",
+          frames: this.anims.generateFrameNumbers("SpaceS1", {
+            start: 0,
+            end: 0,
+          }),
+          frameRate: 20,
+          repeat: 0,
+        });
+      }
       if (spaceship.health == 0) {
         this.anims.create({
           key: "SUEXPLODE",
@@ -192,16 +223,26 @@ function create(this: Phaser.Scene) {
         endGame(scene, spaceship);
       }
       safeRemove(bullet, bulletsToRemove);
-      bullet.destroy();
-      bulletsToRemove.push(bullet);
     }
   });
-  smartOverlap(this, bullets, ufo, (bullet, ufo) => {
+  smartCollider(this, bullets, ufo, (bullet, ufo) => {
     if (bullet instanceof SpaceshipLaser) {
       ufo.health--;
       if (ufo.health == 2) {
+        this.anims.create({
+          key: "UFO2",
+          frames: this.anims.generateFrameNumbers("UFO2", { start: 0, end: 6 }),
+          frameRate: 20,
+          repeat: 0,
+        });
       }
       if (ufo.health == 1) {
+        this.anims.create({
+          key: "UFO1",
+          frames: this.anims.generateFrameNumbers("UFO1", { start: 0, end: 0 }),
+          frameRate: 20,
+          repeat: 0,
+        });
       }
       if (ufo.health == 0) {
         ufo.disableBody(true, true);
@@ -210,8 +251,6 @@ function create(this: Phaser.Scene) {
         endGame(scene, ufo);
       }
       safeRemove(bullet, bulletsToRemove);
-      bullet.destroy();
-      bulletsToRemove.push(bullet);
     }
   });
 
@@ -238,7 +277,7 @@ function create(this: Phaser.Scene) {
 
   const runButton = document.querySelector("#run") as HTMLButtonElement;
   runButton.addEventListener("click", () => {
-    C4C.Interpreter.run(C4C.Editor.getText());
+    C4C.Interpreter.run(C4C.Editor.getText().replace(/forever/, "100000"));
   });
 }
 
@@ -274,8 +313,9 @@ const safeRemove = <T extends { destroy(): void }>(t: T, toRemove: T[]) => {
 let lastCodeAction = 0;
 
 function update(this: Phaser.Scene) {
-  var x: number;
-  var y: number;
+  if (gameState !== "PLAYING") return;
+  var x;
+  var y;
   if (game.input.mousePointer.isDown) {
     x = game.input.mousePointer.x;
     y = game.input.mousePointer.y;
@@ -283,7 +323,7 @@ function update(this: Phaser.Scene) {
     box.innerHTML = "x" + Math.round(x) + "y" + Math.round(y);
   }
 
-  if (Date.now() - lastCodeAction > 0 && actionQueue.length > 0) {
+  if (Date.now() - lastCodeAction > 500 && actionQueue.length > 0) {
     actionQueue[0]();
     actionQueue.splice(0, 1);
     lastCodeAction = Date.now();
@@ -302,6 +342,65 @@ function update(this: Phaser.Scene) {
   bulletsToRemove = [];
   asteroidsToRemove = [];
 
+  if (GameOver == true) {
+    /*
+     * This is the place to implement ability to play a new game
+     */
+    //game.destroy(true);
+    const resetButton = document.querySelector("#restart") as HTMLButtonElement;
+    resetButton.addEventListener("click", () => {
+      //Delete All Asteroids, Stars, and Black Holes
+      GameOver = false;
+      //TODO
+      //Re-spawn Asteroids, Stars, and Black Holes
+      //RESPAWN STARS
+      // for (let i = 0; i < 100; i++){
+      //   stars.push(
+      //   this.add.circle(
+      //     getRandomInt(0, this.renderer.width),
+      //     getRandomInt(0, this.renderer.height),
+      //     getRandomDouble(0.5, 3),
+      //     0xffffff
+      //     )
+      //   );
+      // }
+      //Delete ASTEROIDS
+      for (let i = 0; i < asteroidCount; i++) {
+        try {
+          asteroids[i].disableBody(true, true);
+        } catch (err) {
+          //Catching Error that body is already disabled
+          //Do Nothing Here
+        }
+      }
+      asteroids.splice(0, asteroids.length);
+      asteroidsToRemove = [];
+      asteroidSpawnChance = 90;
+      for (let i = 0; i < asteroidCount; i++) {
+        // if an asteroid is chosen to be spawned
+        asteroids[i];
+        if (getRandomInt(0, 99) < asteroidSpawnChance) {
+          asteroidSpawnChance -= 10;
+          // create asteroid and add colliders
+          asteroids[i] = new Asteroid(
+            this,
+            getRandomInt(asteroidSpawnXMin, asteroidSpawnXMax),
+            asteroidSpawnYMin + i * asteroidHeight
+          );
+        } else {
+          asteroidSpawnChance += 10;
+        }
+      }
+
+      //figure out how to do black holes -- Not Needed for now
+
+      //Re-Enable UFO and Asteroid
+
+      ufo.resetVehicle();
+      spaceship.resetVehicle();
+    });
+  }
+  
   bullets.forEach((bullet) => {
     if (
       bullet.body.position.x < -bullet.body.width ||
@@ -326,7 +425,6 @@ function update(this: Phaser.Scene) {
   });
 }
 
-
 // todo: convert to new interpreter actions
 // function ufoTurn() {
 //   const actions: Action[] = [];
@@ -349,3 +447,4 @@ function update(this: Phaser.Scene) {
   end
 end
 */
+

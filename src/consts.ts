@@ -1,4 +1,5 @@
-import { Bullet, BlackHole } from './objects';
+import Bullet from "./objects/bullet";
+import BlackHole from "./objects/blackhole";
 
 // screen size and camera
 export const screenWidth = 1000;
