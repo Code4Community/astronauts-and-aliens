@@ -1,3 +1,4 @@
+import Asteroid from "./objects/asteroid";
 import Bullet from "./objects/bullet";
 import BlackHole from "./objects/blackhole";
 
@@ -27,6 +28,8 @@ export const asteroidHeight = (asteroidSpawnYMax - asteroidSpawnYMin) / asteroid
 
 // array of bullets, each fired bullet is appended here
 export const bullets: Bullet[] = [];
+
+export const asteroids: Asteroid[] = [];
 
 //array for black holes
 export const blackHoles: BlackHole[] = [];
